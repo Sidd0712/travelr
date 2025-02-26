@@ -24,34 +24,18 @@ class _LoginPageState extends State<LoginPage>
   void _toggleSignUp() {
     setState(() {
       _isSignUp = !_isSignUp; // Toggle between Sign-In and Sign-Up
-      _emailController.text = "";
-      _passwordController.text = "";
+      //_emailController.text = "";
+      //_passwordController.text = "";
       _confirmPasswordController.text = "";
     });
   }
 
   void _signIn() {
     if (_formKey.currentState!.validate()) {
-      String email = _emailController.text;
-      String password = _passwordController.text;
+      //String email = _emailController.text;
+      //String password = _passwordController.text;
 
-      if (email.isEmpty || password.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              backgroundColor: Colors.black,
-              content: Center(
-                  child: Row(
-                children: [
-                  Icon(Icons.error, color: Colors.white),
-                  SizedBox(width: 5),
-                  Text("Please enter the correct credentials!!")
-                ],
-              ))),
-        );
-        return;
-      }
-
-      print("Email: $email, Password: $password");
+      //print("Email: $email, Password: $password");
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -165,6 +149,27 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
+  TextFormField _emailField() {
+    return TextFormField(
+      cursorColor: Colors.black,
+      controller: _emailController,
+      validator: _validateEmail,
+      decoration: const InputDecoration(
+        filled: true,
+        hintText: "Email-ID",
+        contentPadding: EdgeInsets.all(15),
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide()),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+      ),
+    );
+  }
+
   TextButton _toggleBtn() {
     return TextButton(
       onPressed: _toggleSignUp,
@@ -258,27 +263,6 @@ class _LoginPageState extends State<LoginPage>
         focusedBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.blue, width: 2),
           borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-    );
-  }
-
-  TextFormField _emailField() {
-    return TextFormField(
-      cursorColor: Colors.black,
-      controller: _emailController,
-      validator: _validateEmail,
-      decoration: const InputDecoration(
-        filled: true,
-        hintText: "Email-ID",
-        contentPadding: EdgeInsets.all(15),
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide()),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
       ),
     );
