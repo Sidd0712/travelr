@@ -68,6 +68,50 @@ class _LoginPageState extends State<LoginPage>
     }
   }
 
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return "Email is required";
+    }
+    final emailRegex =
+        RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+    if (!emailRegex.hasMatch(value)) {
+      return "Enter a valid email";
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return "Password is required";
+    }
+    if (value.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(value)) {
+      return "Password must contain at least one uppercase letter";
+    }
+    if (!RegExp(r'[a-z]').hasMatch(value)) {
+      return "Password must contain at least one lowercase letter";
+    }
+    if (!RegExp(r'[0-9]').hasMatch(value)) {
+      return "Password must contain at least one digit";
+    }
+    if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
+      return "Password must contain at least one special character";
+    }
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value, String password) {
+    if (value == null || value.isEmpty) {
+      return "Confirm password is required";
+    }
+    if (value != password) {
+      return "Passwords do not match";
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -168,6 +212,8 @@ class _LoginPageState extends State<LoginPage>
               child: TextFormField(
                 cursorColor: Colors.black,
                 controller: _confirmPasswordController,
+                validator: (value) =>
+                    _validateConfirmPassword(value, _passwordController.text),
                 obscureText: _obscureText,
                 decoration: const InputDecoration(
                   filled: true,
@@ -191,6 +237,7 @@ class _LoginPageState extends State<LoginPage>
     return TextFormField(
       cursorColor: Colors.black,
       controller: _passwordController,
+      validator: _validatePassword,
       obscureText: _obscureText,
       decoration: InputDecoration(
         suffixIcon: Padding(
@@ -220,6 +267,7 @@ class _LoginPageState extends State<LoginPage>
     return TextFormField(
       cursorColor: Colors.black,
       controller: _emailController,
+      validator: _validateEmail,
       decoration: const InputDecoration(
         filled: true,
         hintText: "Email-ID",
