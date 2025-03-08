@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:travelr/login/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -30,25 +31,19 @@ class _LoginPageState extends State<LoginPage>
     });
   }
 
-  void _signIn() {
+  void _signIn() async {
     if (_formKey.currentState!.validate()) {
-      //String email = _emailController.text;
-      //String password = _passwordController.text;
+      String email = _emailController.text;
+      String password = _passwordController.text;
 
       //print("Email: $email, Password: $password");
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            backgroundColor: Colors.black,
-            content: Center(
-                child: Row(
-              children: [
-                const Icon(Icons.info, color: Colors.white),
-                const SizedBox(width: 5),
-                Text("${_isSignUp ? 'Sign-Up' : 'Sign-In'} Successful!")
-              ],
-            ))),
-      );
+      if (_isSignUp) {
+        await AuthService()
+            .signUp(email: email, password: password, context: context);
+      } else {
+        await AuthService()
+            .signIn(email: email, password: password, context: context);
+      }
     }
   }
 
