@@ -7,15 +7,18 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.2.3 <4.0.0'
+  sdk: '>=3.3.2 <4.0.0'
 
 dependencies:
   firebase_auth: ^4.17.8
   firebase_core: ^2.27.0
+  cloud_firestore: ^4.8.0
+
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  get: ^4.6.6
 
 dev_dependencies:
   flutter_test:

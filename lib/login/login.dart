@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:travelr/login/auth_service.dart';
+import 'package:travelr/login/create_profile.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -40,6 +41,8 @@ class _LoginPageState extends State<LoginPage>
       if (_isSignUp) {
         await AuthService()
             .signUp(email: email, password: password, context: context);
+
+        ///Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext newContext) => CreateProfileScreen(email: email, password: password),),);
       } else {
         await AuthService()
             .signIn(email: email, password: password, context: context);

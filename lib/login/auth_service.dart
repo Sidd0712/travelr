@@ -28,7 +28,7 @@ class AuthService {
 
       navigator.pushReplacement(
         MaterialPageRoute(
-          builder: (BuildContext newContext) => HomeScreen(userName: email),
+          builder: (BuildContext newContext) => const HomeScreen(),
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -49,7 +49,7 @@ class AuthService {
               children: [
                 const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 5),
-                Text(message)
+                Text(e.code ?? "An unknown error occured!")
               ],
             )),
       );
@@ -81,7 +81,7 @@ class AuthService {
 
       navigator.pushReplacement(
         MaterialPageRoute(
-          builder: (BuildContext newContext) => HomeScreen(userName: email),
+          builder: (BuildContext newContext) => const HomeScreen(),
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -102,7 +102,7 @@ class AuthService {
               children: [
                 const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 5),
-                Text(message)
+                Text(e.code ?? "An unknown error occured!")
               ],
             )),
       );

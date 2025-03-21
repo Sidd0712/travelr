@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:travelr/login/login.dart';
 
 class HomeScreen extends StatelessWidget {
-  final String userName;
-
-  const HomeScreen({super.key, required this.userName});
+  const HomeScreen({super.key});
 
   void _signOut(BuildContext context) async {
     final navigator = Navigator.of(context);
@@ -42,10 +40,17 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Welcome ${userName.split("@")[0]}!",
+                "Welcome ${FirebaseAuth.instance.currentUser?.email?.split("@")[0]}!",
                 textAlign: TextAlign.justify,
                 style:
                     const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "UID - ${FirebaseAuth.instance.currentUser?.uid}",
+                textAlign: TextAlign.left,
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               TextButton(

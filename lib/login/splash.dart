@@ -25,10 +25,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (isLoggedIn) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(
-                userName: FirebaseAuth.instance.currentUser?.email ?? 'User'),
-          ),
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       } else {
         Navigator.pushReplacement(
