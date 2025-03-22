@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:travelr/login/auth_service.dart';
 
 class CreateProfileScreen extends StatefulWidget {
   const CreateProfileScreen(
@@ -12,7 +13,7 @@ class CreateProfileScreen extends StatefulWidget {
 }
 
 class _CreateProfileScreenState extends State<CreateProfileScreen> {
-  final TextEditingController _nicknameController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _startingLocationController =
       TextEditingController();
@@ -20,6 +21,26 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       TextEditingController();
   String? _selectedGender;
   String? _selectedGenderPreference;
+
+  Future<void> _signUp() async {
+    await AuthService().signUp(
+      data: toMap(),
+      context: context,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': _nameController.text,
+      'phone': _phoneController.text,
+      'startingLocation': _startingLocationController.text,
+      'endingLocation': _endingLocationController.text,
+      'gender': _selectedGender,
+      'genderPreference': _selectedGenderPreference,
+      'email': widget.email,
+      'password': widget.password,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,51 +82,196 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
                       fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
-                TextFormField(
-                  cursorColor: Colors.black,
-                  controller: _nicknameController,
-                  decoration: const InputDecoration(
-                    filled: true,
-                    hintText: "Nickname",
-                    contentPadding: EdgeInsets.all(15),
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                        borderSide: BorderSide()),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.blue, width: 2),
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                nameField(),
+                const SizedBox(height: 10),
+                phoneField(),
+                const SizedBox(height: 10),
+                startingLocationField(),
+                const SizedBox(height: 10),
+                endingLocationField(),
+                const SizedBox(height: 10),
+                genderField(),
+                const SizedBox(height: 10),
+                genderPreferenceField(),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: _signUp,
+                  style: const ButtonStyle(
+                    fixedSize:
+                        WidgetStatePropertyAll(Size(double.infinity, 50)),
+                    padding: WidgetStatePropertyAll(EdgeInsets.zero),
+                    backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10)))),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      "Sign-Up",
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                TextFormField(
-                  cursorColor: Colors.black,
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(10),
-                  ],
-                  decoration: const InputDecoration(
-                    filled: true,
-                    hintText: "Phone Number",
-                    //prefixText: "+91 ", // Adds the +91 prefix
-                    prefix: Text("+91 "),
-                    contentPadding: EdgeInsets.all(15),
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                      borderSide: BorderSide(),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.blue, width: 2),
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
               ]),
+        ),
+      ),
+    );
+  }
+
+  DropdownButtonFormField<String> genderPreferenceField() {
+    return DropdownButtonFormField<String>(
+      decoration: const InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: EdgeInsets.all(15),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+          borderSide: BorderSide(),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+      ),
+      hint: const Text("Select Companion Gender Preference"),
+      value: _selectedGenderPreference,
+      items: ["Male", "Female", "Both"]
+          .map((gender) => DropdownMenuItem(
+                value: gender,
+                child: Text(gender),
+              ))
+          .toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedGenderPreference = value;
+        });
+      },
+    );
+  }
+
+  DropdownButtonFormField<String> genderField() {
+    return DropdownButtonFormField<String>(
+      decoration: const InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: EdgeInsets.all(15),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+          borderSide: BorderSide(),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+      ),
+      hint: const Text("Select Gender"),
+      value: _selectedGender,
+      items: ["Male", "Female"]
+          .map((gender) => DropdownMenuItem(
+                value: gender,
+                child: Text(gender),
+              ))
+          .toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedGender = value;
+        });
+      },
+    );
+  }
+
+  TextFormField endingLocationField() {
+    return TextFormField(
+      cursorColor: Colors.black,
+      controller: _endingLocationController,
+      decoration: const InputDecoration(
+        filled: true,
+        hintText: "Ending Location",
+        contentPadding: EdgeInsets.all(15),
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide()),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+      ),
+    );
+  }
+
+  TextFormField startingLocationField() {
+    return TextFormField(
+      cursorColor: Colors.black,
+      controller: _startingLocationController,
+      decoration: const InputDecoration(
+        filled: true,
+        hintText: "Starting Location",
+        contentPadding: EdgeInsets.all(15),
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide()),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+      ),
+    );
+  }
+
+  TextFormField phoneField() {
+    return TextFormField(
+      cursorColor: Colors.black,
+      controller: _phoneController,
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      decoration: const InputDecoration(
+        filled: true,
+        hintText: "Phone Number",
+        contentPadding: EdgeInsets.all(15),
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+          borderSide: BorderSide(),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+        prefixIcon: Padding(
+          padding: EdgeInsets.only(left: 15),
+          child: Text(
+            "+91",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        prefixIconConstraints: BoxConstraints(minWidth: 30),
+      ),
+    );
+  }
+
+  TextFormField nameField() {
+    return TextFormField(
+      cursorColor: Colors.black,
+      controller: _nameController,
+      decoration: const InputDecoration(
+        filled: true,
+        hintText: "Name",
+        contentPadding: EdgeInsets.all(15),
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide()),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+          borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
       ),
     );

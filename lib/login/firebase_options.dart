@@ -25,9 +25,15 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
-        return windows;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -39,6 +45,16 @@ class DefaultFirebaseOptions {
         );
     }
   }
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDxN51Pvcw275VbXBL4xV-ReWuBo-SqZwg',
+    appId: '1:837109274820:web:67513a9e7c7df0e9351191',
+    messagingSenderId: '837109274820',
+    projectId: 'trave-14bee',
+    authDomain: 'trave-14bee.firebaseapp.com',
+    storageBucket: 'trave-14bee.firebasestorage.app',
+    measurementId: 'G-LEF4QDFGDK',
+  );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyA6XbhgXvJJSK_IeEfDJyeOjeGOjQ4K5Gk',
@@ -56,34 +72,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'trave-14bee.firebasestorage.app',
     iosBundleId: 'com.example.travelr',
   );
-
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDxN51Pvcw275VbXBL4xV-ReWuBo-SqZwg',
-    appId: '1:837109274820:web:67513a9e7c7df0e9351191',
-    messagingSenderId: '837109274820',
-    projectId: 'trave-14bee',
-    authDomain: 'trave-14bee.firebaseapp.com',
-    storageBucket: 'trave-14bee.firebasestorage.app',
-    measurementId: 'G-LEF4QDFGDK',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBOzgZvZGPpxoG57fgWou45JpzOUv12Y2E',
-    appId: '1:837109274820:ios:e4651f14ca5fceae351191',
-    messagingSenderId: '837109274820',
-    projectId: 'trave-14bee',
-    storageBucket: 'trave-14bee.firebasestorage.app',
-    iosBundleId: 'com.example.travelr',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDxN51Pvcw275VbXBL4xV-ReWuBo-SqZwg',
-    appId: '1:837109274820:web:44e92787ef05a678351191',
-    messagingSenderId: '837109274820',
-    projectId: 'trave-14bee',
-    authDomain: 'trave-14bee.firebaseapp.com',
-    storageBucket: 'trave-14bee.firebasestorage.app',
-    measurementId: 'G-VN5MPJ545M',
-  );
-
 }

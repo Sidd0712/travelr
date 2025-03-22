@@ -1,9 +1,25 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:travelr/database/profile_model.dart';
+import 'package:travelr/database/profiles.dart';
 import 'package:travelr/login/login.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  Profile? user;
+  String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserProfile();
+  }
 
   void _signOut(BuildContext context) async {
     final navigator = Navigator.of(context);
@@ -13,6 +29,13 @@ class HomeScreen extends StatelessWidget {
       MaterialPageRoute(builder: (context) => LoginPage()),
       (route) => false,
     );
+  }
+
+  void fetchUserProfile() async {
+    Profile? profile = await ProfilesDatabase.getProfileFromUID(uid);
+    setState(() {
+      user = profile;
+    });
   }
 
   @override
@@ -39,28 +62,37 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Welcome ${FirebaseAuth.instance.currentUser?.email?.split("@")[0]}!",
-                textAlign: TextAlign.justify,
-                style:
-                    const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                "UID - ${FirebaseAuth.instance.currentUser?.uid}",
-                textAlign: TextAlign.left,
-                style:
-                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              const Text(
+                "Profile",
+                style: TextStyle(
+                    fontSize: 30,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
+              createTextWithFont(user!.name, 28),
+              const SizedBox(height: 5),
+              createTextWithFont(user!.gender, 25),
+              const SizedBox(height: 5),
+              createTextWithFont((user!.phoneNumber).toString(), 25),
+              const SizedBox(height: 5),
+              createTextWithFont("Travel Preference: ${user!.preference}", 25),
+              const SizedBox(height: 5),
+              createTextWithFont(
+                  "Starting Location: (${user!.start.latitude}, ${user!.start.longitude})",
+                  25),
+              const SizedBox(height: 5),
+              createTextWithFont(
+                  "Ending Location: (${user!.end.latitude}, ${user!.end.longitude})",
+                  25),
+              const SizedBox(height: 10),
               TextButton(
                 onPressed: () => _signOut(context),
                 style: const ButtonStyle(
-                  fixedSize:
-                      MaterialStatePropertyAll(Size(double.infinity, 50)),
-                  padding: MaterialStatePropertyAll(EdgeInsets.zero),
-                  backgroundColor: MaterialStatePropertyAll(Colors.red),
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                  fixedSize: WidgetStatePropertyAll(Size(double.infinity, 50)),
+                  padding: WidgetStatePropertyAll(EdgeInsets.zero),
+                  backgroundColor: WidgetStatePropertyAll(Colors.red),
+                  shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10)))),
                 ),
                 child: const Center(
@@ -76,6 +108,16 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Text createTextWithFont(String data, double? size) {
+    return Text(
+      data,
+      style: TextStyle(
+        fontSize: size,
+        color: Colors.black,
       ),
     );
   }
