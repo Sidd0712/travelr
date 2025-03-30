@@ -1,18 +1,19 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:travelr/home/home_screen.dart';
 import 'package:travelr/login/login.dart';
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class SplashScreenPage extends StatefulWidget {
+  const SplashScreenPage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<SplashScreenPage> createState() => _SplashScreenPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _SplashScreenPageState extends State<SplashScreenPage> {
   @override
   void initState() {
     super.initState();
@@ -43,6 +44,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
+      // Change to match your app background
+      //systemNavigationBarIconBrightness: Brightness.dark, // Change icon color if needed
+    ));
+
     return const Scaffold(
       body: Center(
         child: Text(

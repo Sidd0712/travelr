@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:travelr/login/auth_service.dart';
 import 'package:travelr/login/create_profile.dart';
-//import 'package:travelr/login/create_profile.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -99,6 +99,12 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
+      // Change to match your app background
+      //systemNavigationBarIconBrightness: Brightness.dark, // Change icon color if needed
+    ));
+
     return Scaffold(
       appBar: AppBar(
         title: const Column(children: [

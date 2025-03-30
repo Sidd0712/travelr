@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:travelr/home/home_screen.dart';
 import 'package:travelr/login/create_profile.dart';
 import 'package:travelr/login/splash.dart';
@@ -46,7 +47,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: const HomeScreen(),
+      home: const SplashScreenPage(title: "travelr"),
     );
   }
 }

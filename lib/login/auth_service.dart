@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:travelr/database/profile_model.dart';
-import 'package:travelr/database/profiles.dart';
+import 'package:travelr/database/profile_service.dart';
 import 'package:travelr/home/home_screen.dart';
 
 class AuthService {
@@ -132,10 +132,8 @@ class AuthService {
       );
     } on FirebaseAuthException catch (e) {
       String message = "";
-      if (e.code == 'user-not-found') {
-        message = "No user found for this email.";
-      } else if (e.code == 'wrong-password') {
-        message = "Incorrect Password.";
+      if (e.code == 'invalid-credential') {
+        message = "Email or password was incorrect.";
       } else {
         message = "An unknown error occurred.";
       }
@@ -144,11 +142,11 @@ class AuthService {
         SnackBar(
             backgroundColor: Colors.black,
             content: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 5),
-                Text(e.code ?? "An unknown error occured!")
+                Text(message)
               ],
             )),
       );

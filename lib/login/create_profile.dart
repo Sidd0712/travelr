@@ -21,6 +21,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       TextEditingController();
   String? _selectedGender;
   String? _selectedGenderPreference;
+  final String key = "OdeLqe1b9wIUiUB9ABvdcQQWivNZoLgZ3O5cncbWAkE";
 
   Future<void> _signUp() async {
     await AuthService().signUp(
@@ -44,6 +45,12 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
+      // Change to match your app background
+      //systemNavigationBarIconBrightness: Brightness.dark, // Change icon color if needed
+    ));
+
     return Scaffold(
       appBar: AppBar(
         title: const Column(children: [
@@ -56,6 +63,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
                 fontFamily: "Northlane", fontSize: 38, color: Colors.black),
           ),
         ]),
+        forceMaterialTransparency: true,
         centerTitle: true,
         leading: Padding(
           padding: const EdgeInsets.only(top: 10, left: 10),
@@ -70,115 +78,112 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
         padding: const EdgeInsets.all(15.0),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 15.0),
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Create Profile",
-                  style: TextStyle(
-                      fontSize: 30,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                nameField(),
-                const SizedBox(height: 10),
-                phoneField(),
-                const SizedBox(height: 10),
-                startingLocationField(),
-                const SizedBox(height: 10),
-                endingLocationField(),
-                const SizedBox(height: 10),
-                genderField(),
-                const SizedBox(height: 10),
-                genderPreferenceField(),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: _signUp,
-                  style: const ButtonStyle(
-                    fixedSize:
-                        WidgetStatePropertyAll(Size(double.infinity, 50)),
-                    padding: WidgetStatePropertyAll(EdgeInsets.zero),
-                    backgroundColor: WidgetStatePropertyAll(Colors.blue),
-                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)))),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      "Sign-Up",
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
+          child: Center(
+            child: SingleChildScrollView(
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Create Profile",
+                      style: TextStyle(
+                          fontSize: 30,
+                          color: Colors.black,
                           fontWeight: FontWeight.bold),
                     ),
-                  ),
-                ),
-              ]),
+                    const SizedBox(height: 10),
+                    nameField(),
+                    const SizedBox(height: 10),
+                    phoneField(),
+                    const SizedBox(height: 10),
+                    startingLocationField(),
+                    const SizedBox(height: 10),
+                    endingLocationField(),
+                    const SizedBox(height: 10),
+                    genderField(),
+                    const SizedBox(height: 10),
+                    genderPreferenceField(),
+                    //const SizedBox(height: 10),
+                    //
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: _signUp,
+                      style: const ButtonStyle(
+                        fixedSize:
+                            WidgetStatePropertyAll(Size(double.infinity, 50)),
+                        padding: WidgetStatePropertyAll(EdgeInsets.zero),
+                        backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                        shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10)))),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          "Sign-Up",
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ]),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  DropdownButtonFormField<String> genderPreferenceField() {
-    return DropdownButtonFormField<String>(
-      decoration: const InputDecoration(
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: EdgeInsets.all(15),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-          borderSide: BorderSide(),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
-      ),
-      hint: const Text("Select Companion Gender Preference"),
-      value: _selectedGenderPreference,
-      items: ["Male", "Female", "Both"]
-          .map((gender) => DropdownMenuItem(
+  Widget genderPreferenceField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Select Companion Gender Preference",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Row(
+          children: ["Male", "Female", "Both"].map((gender) {
+            return Expanded(
+              child: RadioListTile<String>(
+                title: Text(gender),
                 value: gender,
-                child: Text(gender),
-              ))
-          .toList(),
-      onChanged: (value) {
-        setState(() {
-          _selectedGenderPreference = value;
-        });
-      },
+                groupValue: _selectedGenderPreference,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedGenderPreference = value;
+                  });
+                },
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
-  DropdownButtonFormField<String> genderField() {
-    return DropdownButtonFormField<String>(
-      decoration: const InputDecoration(
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: EdgeInsets.all(15),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-          borderSide: BorderSide(),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
-      ),
-      hint: const Text("Select Gender"),
-      value: _selectedGender,
-      items: ["Male", "Female"]
-          .map((gender) => DropdownMenuItem(
+  Widget genderField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Select Gender",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Row(
+          children: ["Male", "Female"].map((gender) {
+            return Expanded(
+              child: RadioListTile<String>(
+                title: Text(gender),
                 value: gender,
-                child: Text(gender),
-              ))
-          .toList(),
-      onChanged: (value) {
-        setState(() {
-          _selectedGender = value;
-        });
-      },
+                groupValue: _selectedGender,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedGender = value;
+                  });
+                },
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
