@@ -62,7 +62,7 @@ class _ChatPageState extends State<ChatPage> {
             Expanded(
               child: _buildMessagesList(),
             ),
-            const SizedBox(height: 20), // Added vertical spacing before input
+            const SizedBox(height: 20),
             _userInput(),
           ],
         ),
@@ -92,7 +92,7 @@ class _ChatPageState extends State<ChatPage> {
         });
 
         return ListView(
-          controller: _scrollController, // Attach the scroll controller
+          controller: _scrollController,
           children:
               snapshot.data!.docs.map((doc) => _buildMessageItem(doc)).toList(),
         );
@@ -140,9 +140,8 @@ class _ChatPageState extends State<ChatPage> {
             child: TextFormField(
               cursorColor: Colors.black,
               controller: _messagesController,
-              textInputAction: TextInputAction.send, // Change action to 'send'
-              onFieldSubmitted: (value) =>
-                  sendMessage(), // Trigger send on Enter
+              textInputAction: TextInputAction.send,
+              onFieldSubmitted: (value) => sendMessage(),
               decoration: const InputDecoration(
                 filled: true,
                 hintText: "Type a message...",

@@ -32,7 +32,6 @@ class _HomeScreenState extends State<HomeScreen> {
       allUsers = ProfilesDatabase.getProfiles();
     });
 
-    // Debugging: Check if profiles are fetched
     allUsers.listen((profiles) {
       print("Profiles fetched: ${profiles.length}");
       for (var profile in profiles) {
@@ -137,7 +136,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// **Fixed `_chatScreen()` using StreamBuilder**
   StreamBuilder<List<Profile>> _chatScreen() {
     return StreamBuilder<List<Profile>>(
       stream: allUsers,
