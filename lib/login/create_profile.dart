@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:travelr/google_api/address_autocomplete.dart';
 import 'package:travelr/login/auth_service.dart';
 
 class CreateProfileScreen extends StatefulWidget {
@@ -22,6 +24,8 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   String? _selectedGender;
   String? _selectedGenderPreference;
   final String key = "OdeLqe1b9wIUiUB9ABvdcQQWivNZoLgZ3O5cncbWAkE";
+  late GeoPoint startingGeoPoint;
+  late GeoPoint endingGeoPoint;
 
   Future<void> _signUp() async {
     await AuthService().signUp(
@@ -34,8 +38,8 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     return {
       'name': _nameController.text,
       'phone': _phoneController.text,
-      'startingLocation': _startingLocationController.text,
-      'endingLocation': _endingLocationController.text,
+      'startingLocation': startingGeoPoint,
+      'endingLocation': endingGeoPoint,
       'gender': _selectedGender,
       'genderPreference': _selectedGenderPreference,
       'email': widget.email,
@@ -68,7 +72,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
         leading: Padding(
           padding: const EdgeInsets.only(top: 10, left: 10),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back_rounded),
             iconSize: 38,
             onPressed: () => Navigator.pop(context),
           ),
@@ -96,9 +100,10 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
                     const SizedBox(height: 10),
                     phoneField(),
                     const SizedBox(height: 10),
-                    startingLocationField(),
+                    locationField(
+                        _startingLocationController, "Starting Location"),
                     const SizedBox(height: 10),
-                    endingLocationField(),
+                    locationField(_endingLocationController, "Ending Location"),
                     const SizedBox(height: 10),
                     genderField(),
                     const SizedBox(height: 10),
@@ -187,43 +192,18 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     );
   }
 
-  TextFormField endingLocationField() {
-    return TextFormField(
-      cursorColor: Colors.black,
-      controller: _endingLocationController,
-      decoration: const InputDecoration(
-        filled: true,
-        hintText: "Ending Location",
-        contentPadding: EdgeInsets.all(15),
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide()),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
-      ),
-    );
-  }
-
-  TextFormField startingLocationField() {
-    return TextFormField(
-      cursorColor: Colors.black,
-      controller: _startingLocationController,
-      decoration: const InputDecoration(
-        filled: true,
-        hintText: "Starting Location",
-        contentPadding: EdgeInsets.all(15),
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide()),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
-      ),
+  Widget locationField(TextEditingController controller, String hintText) {
+    return AddressAutocomplete(
+      controller: controller,
+      hintText: hintText,
+      onLocationSelected: (locationData) {
+        GeoPoint geoPoint = GeoPoint(locationData["lat"], locationData["lng"]);
+        if (controller == _startingLocationController) {
+          startingGeoPoint = geoPoint;
+        } else {
+          endingGeoPoint = geoPoint;
+        }
+      },
     );
   }
 

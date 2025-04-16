@@ -27,8 +27,8 @@ class AuthService {
 
       String name = data['name'] ?? '';
       int phone = int.parse(data['phone']);
-      String start = data['startingLocation'] ?? '';
-      String end = data['endingLocation'] ?? '';
+      GeoPoint start = data['startingLocation'] ?? GeoPoint(0, 0);
+      GeoPoint end = data['endingLocation'] ?? GeoPoint(0, 0);
       String gender = data['gender'];
       String genderPreference = data['genderPreference'];
 
@@ -38,8 +38,8 @@ class AuthService {
         gender: gender,
         phoneNumber: phone,
         preference: genderPreference,
-        start: const GeoPoint(0, 0),
-        end: const GeoPoint(0, 0),
+        start: start,
+        end: end,
       );
 
       await ProfilesDatabase.addProfile(newUser);

@@ -32,12 +32,12 @@ class _HomeScreenState extends State<HomeScreen> {
       allUsers = ProfilesDatabase.getProfiles();
     });
 
-    allUsers.listen((profiles) {
-      print("Profiles fetched: ${profiles.length}");
-      for (var profile in profiles) {
-        print("User: ${profile.name}, UID: ${profile.uid}");
-      }
-    });
+    // allUsers.listen((profiles) {
+    //   print("Profiles fetched: ${profiles.length}");
+    //   for (var profile in profiles) {
+    //     print("User: ${profile.name}, UID: ${profile.uid}");
+    //   }
+    // });
   }
 
   void _signOut(BuildContext context) async {
@@ -50,6 +50,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onItemTapped(int index) {
+    if (index == 1) {
+      setState(() {
+        allUsers = ProfilesDatabase.getProfiles();
+      });
+    }
     setState(() {
       _selectedIndex = index;
     });
@@ -73,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(
                 fontFamily: "Northlane", fontSize: 38, color: Colors.black)),
         centerTitle: true,
+        leading: SizedBox(),
       ),
       body: IndexedStack(
         index: _selectedIndex,

@@ -181,8 +181,8 @@ class _LoginPageState extends State<LoginPage>
     return TextButton(
       onPressed: _toggleSignUp,
       style: const ButtonStyle(
-          overlayColor: MaterialStatePropertyAll(Colors.transparent),
-          padding: MaterialStatePropertyAll(EdgeInsets.fromLTRB(5, 0, 0, 0))),
+          overlayColor: WidgetStatePropertyAll(Colors.transparent),
+          padding: WidgetStatePropertyAll(EdgeInsets.fromLTRB(5, 0, 0, 0))),
       child: Text(
         _isSignUp ? "Sign-In" : "Sign-Up",
         style: const TextStyle(
@@ -205,7 +205,7 @@ class _LoginPageState extends State<LoginPage>
       ),
       child: Center(
         child: Text(
-          _isSignUp ? "Sign-Up" : "Sign-In",
+          _isSignUp ? "Continue" : "Sign-In",
           style: const TextStyle(
               color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
         ),
