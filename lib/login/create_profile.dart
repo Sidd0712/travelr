@@ -5,8 +5,12 @@ import 'package:travelr/google_api/address_autocomplete.dart';
 import 'package:travelr/login/auth_service.dart';
 
 class CreateProfileScreen extends StatefulWidget {
-  const CreateProfileScreen(
-      {super.key, required this.email, required this.password});
+  const CreateProfileScreen({
+    super.key,
+    required this.email,
+    required this.password,
+  });
+
   final String email;
   final String password;
 
@@ -21,13 +25,26 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       TextEditingController();
   final TextEditingController _endingLocationController =
       TextEditingController();
+
   String? _selectedGender;
   String? _selectedGenderPreference;
-  final String key = "OdeLqe1b9wIUiUB9ABvdcQQWivNZoLgZ3O5cncbWAkE";
-  late GeoPoint startingGeoPoint;
-  late GeoPoint endingGeoPoint;
+
+  GeoPoint? startingGeoPoint;
+  GeoPoint? endingGeoPoint;
 
   Future<void> _signUp() async {
+    if (_nameController.text.isEmpty ||
+        _phoneController.text.length != 10 ||
+        startingGeoPoint == null ||
+        endingGeoPoint == null ||
+        _selectedGender == null ||
+        _selectedGenderPreference == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please complete all fields correctly")),
+      );
+      return;
+    }
+
     await AuthService().signUp(
       data: toMap(),
       context: context,
@@ -51,22 +68,23 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
-      // Change to match your app background
-      //systemNavigationBarIconBrightness: Brightness.dark, // Change icon color if needed
     ));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Column(children: [
-          SizedBox(
-            height: 20,
-          ),
-          Text(
-            "travelr",
-            style: TextStyle(
-                fontFamily: "Northlane", fontSize: 38, color: Colors.black),
-          ),
-        ]),
+        title: const Column(
+          children: [
+            SizedBox(height: 20),
+            Text(
+              "travelr",
+              style: TextStyle(
+                fontFamily: "Northlane",
+                fontSize: 38,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
         forceMaterialTransparency: true,
         centerTitle: true,
         leading: Padding(
@@ -79,90 +97,55 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 15.0),
-          child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Create Profile",
-                      style: TextStyle(
-                          fontSize: 30,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    nameField(),
-                    const SizedBox(height: 10),
-                    phoneField(),
-                    const SizedBox(height: 10),
-                    locationField(
-                        _startingLocationController, "Starting Location"),
-                    const SizedBox(height: 10),
-                    locationField(_endingLocationController, "Ending Location"),
-                    const SizedBox(height: 10),
-                    genderField(),
-                    const SizedBox(height: 10),
-                    genderPreferenceField(),
-                    //const SizedBox(height: 10),
-                    //
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: _signUp,
-                      style: const ButtonStyle(
-                        fixedSize:
-                            WidgetStatePropertyAll(Size(double.infinity, 50)),
-                        padding: WidgetStatePropertyAll(EdgeInsets.zero),
-                        backgroundColor: WidgetStatePropertyAll(Colors.blue),
-                        shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(10)))),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          "Sign-Up",
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ]),
-            ),
+        padding:
+            const EdgeInsets.only(left: 30, right: 30, top: 15, bottom: 15),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Create Profile",
+                style: TextStyle(
+                  fontSize: 30,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              nameField(),
+              const SizedBox(height: 10),
+              phoneField(),
+              const SizedBox(height: 10),
+              locationField(_startingLocationController, "Starting Location"),
+              const SizedBox(height: 10),
+              locationField(_endingLocationController, "Ending Location"),
+              const SizedBox(height: 10),
+              genderField(),
+              const SizedBox(height: 10),
+              genderPreferenceField(),
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: _signUp,
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  "Sign-Up",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget genderPreferenceField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Select Companion Gender Preference",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        Row(
-          children: ["Male", "Female", "Both"].map((gender) {
-            return Expanded(
-              child: RadioListTile<String>(
-                title: Text(gender),
-                value: gender,
-                groupValue: _selectedGenderPreference,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedGenderPreference = value;
-                  });
-                },
-              ),
-            );
-          }).toList(),
-        ),
-      ],
     );
   }
 
@@ -172,19 +155,49 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       children: [
         const Text("Select Gender",
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        Row(
+        Column(
           children: ["Male", "Female"].map((gender) {
-            return Expanded(
-              child: RadioListTile<String>(
-                title: Text(gender),
-                value: gender,
-                groupValue: _selectedGender,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedGender = value;
-                  });
-                },
+            return RadioListTile<String>(
+              title: Text(
+                gender,
+                style: TextStyle(fontSize: 16), // Keep text size consistent
               ),
+              value: gender,
+              groupValue: _selectedGender,
+              activeColor: Colors.blue,
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              onChanged: (value) {
+                setState(() => _selectedGender = value);
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget genderPreferenceField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Select Companion Gender Preference",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Column(
+          children: ["Male", "Female", "Both"].map((gender) {
+            return RadioListTile<String>(
+              title: Text(
+                gender,
+                style: TextStyle(fontSize: 16),
+              ),
+              value: gender,
+              groupValue: _selectedGenderPreference,
+              activeColor: Colors.blue,
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              onChanged: (value) {
+                setState(() => _selectedGenderPreference = value);
+              },
             );
           }).toList(),
         ),
@@ -198,29 +211,31 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       hintText: hintText,
       onLocationSelected: (locationData) {
         GeoPoint geoPoint = GeoPoint(locationData["lat"], locationData["lng"]);
-        if (controller == _startingLocationController) {
-          startingGeoPoint = geoPoint;
-        } else {
-          endingGeoPoint = geoPoint;
-        }
+        setState(() {
+          if (controller == _startingLocationController) {
+            startingGeoPoint = geoPoint;
+          } else {
+            endingGeoPoint = geoPoint;
+          }
+        });
       },
     );
   }
 
   TextFormField phoneField() {
     return TextFormField(
-      cursorColor: Colors.black,
       controller: _phoneController,
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      maxLength: 10,
       decoration: const InputDecoration(
         filled: true,
         hintText: "Phone Number",
+        counterText: "",
         contentPadding: EdgeInsets.all(15),
         fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(10)),
-          borderSide: BorderSide(),
         ),
         focusedBorder: OutlineInputBorder(
           borderSide: BorderSide(color: Colors.blue, width: 2),
@@ -244,7 +259,6 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
 
   TextFormField nameField() {
     return TextFormField(
-      cursorColor: Colors.black,
       controller: _nameController,
       decoration: const InputDecoration(
         filled: true,
@@ -252,8 +266,8 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
         contentPadding: EdgeInsets.all(15),
         fillColor: Colors.white,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide()),
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
         focusedBorder: OutlineInputBorder(
           borderSide: BorderSide(color: Colors.blue, width: 2),
           borderRadius: BorderRadius.all(Radius.circular(10)),

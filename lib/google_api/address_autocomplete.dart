@@ -39,7 +39,7 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
     sessionToken = uuid.v4();
     widget.controller.addListener(_onChange);
     _focusNode.addListener(() {
-      if (_focusNode.hasFocus) {
+      if (_focusNode.hasFocus && widget.controller.text.isNotEmpty) {
         _insertOverlay();
       } else {
         _removeOverlay();
@@ -180,7 +180,13 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
 
   void placeSuggestion(String input) async {
     const String apiKey = "AIzaSyA0NvuvBY0Zjd65JVi-znE2REVcT3ZJoO4";
-    if (input.isEmpty) return;
+    if (input.isEmpty) {
+      setState(() {
+        listOfLocation.clear();
+      });
+      _removeOverlay();
+      return;
+    }
 
     try {
       setState(() {
