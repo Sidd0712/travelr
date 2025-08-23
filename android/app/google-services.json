@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "837109274820",
+    "project_id": "trave-14bee",
+    "storage_bucket": "trave-14bee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:837109274820:android:1463f88d81eef9ab351191",
+        "android_client_info": {
+          "package_name": "com.example.travelr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6XbhgXvJJSK_IeEfDJyeOjeGOjQ4K5Gk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

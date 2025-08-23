@@ -1,0 +1,2 @@
+C:/Users/siddh/travelr/android/app/.cxx/Debug/6i1x3yy2/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/siddh/travelr/android/app/.cxx/Debug/6i1x3yy2/armeabi-v7a/CMakeFiles/rebuild_cache.dir
