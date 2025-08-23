@@ -58,7 +58,7 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
 
   void _onChange() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 250), () {
+    _debounce = Timer(const Duration(milliseconds: 300), () {
       if (widget.controller.text.isNotEmpty) {
         placeSuggestion(widget.controller.text);
         _insertOverlay();
@@ -112,69 +112,71 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
                         itemCount: min(listOfLocation.length, 3),
                         itemBuilder: (context, index) {
                           final desc = listOfLocation[index]["description"];
-                          return ListTile(
-                            title: Text(desc),
-                            onTap: () async {
-                              final selectedPlace = listOfLocation[index];
-                              final desc = selectedPlace["description"];
-                              final placeId = selectedPlace["place_id"];
-
-                              const apiKey =
-                                  "AIzaSyA0NvuvBY0Zjd65JVi-znE2REVcT3ZJoO4";
-                              final detailsUrl =
-                                  "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$apiKey";
-
-                              final response =
-                                  await http.get(Uri.parse(detailsUrl));
-                              if (response.statusCode == 200) {
-                                final data = json.decode(response.body);
-                                print(data);
-                                final result = data["result"];
-
-                                if (result == null ||
-                                    result["geometry"] == null ||
-                                    result["geometry"]["location"] == null) {
-                                  print("Invalid place details: $data");
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Text(
-                                            "Couldn't fetch location details. Please try another address.")),
-                                  );
-                                  return;
-                                }
-
-                                final location = result["geometry"]["location"];
-
-                                final lat = location["lat"];
-                                final lng = location["lng"];
-
-                                widget.onLocationSelected({
-                                  "lat": lat,
-                                  "lng": lng,
-                                  "description": desc,
-                                });
-
-                                widget.controller.removeListener(_onChange);
-
-                                setState(() {
-                                  widget.controller.text = desc;
-                                  listOfLocation.clear();
-                                });
-
-                                _removeOverlay();
-                                _focusNode.unfocus();
-
-                                widget.controller.addListener(_onChange);
-                              } else {
-                                print("Failed to fetch place details");
-                              }
-                            },
-                          );
+                          return _overlayListTile(desc, index, context);
                         },
                       ),
           ),
         ),
       ),
+    );
+  }
+
+  ListTile _overlayListTile(desc, int index, BuildContext context) {
+    return ListTile(
+      title: Text(desc),
+      onTap: () async {
+        final selectedPlace = listOfLocation[index];
+        final desc = selectedPlace["description"];
+        final placeId = selectedPlace["place_id"];
+
+        const apiKey = "AIzaSyA0NvuvBY0Zjd65JVi-znE2REVcT3ZJoO4";
+        final detailsUrl =
+            "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$apiKey";
+
+        final response = await http.get(Uri.parse(detailsUrl));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          print(data);
+          final result = data["result"];
+
+          if (result == null ||
+              result["geometry"] == null ||
+              result["geometry"]["location"] == null) {
+            print("Invalid place details: $data");
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(
+                      "Couldn't fetch location details. Please try another address.")),
+            );
+            return;
+          }
+
+          final location = result["geometry"]["location"];
+
+          final lat = location["lat"];
+          final lng = location["lng"];
+
+          widget.onLocationSelected({
+            "lat": lat,
+            "lng": lng,
+            "description": desc,
+          });
+
+          widget.controller.removeListener(_onChange);
+
+          setState(() {
+            widget.controller.text = desc;
+            listOfLocation.clear();
+          });
+
+          _removeOverlay();
+          _focusNode.unfocus();
+
+          widget.controller.addListener(_onChange);
+        } else {
+          print("Failed to fetch place details");
+        }
+      },
     );
   }
 
