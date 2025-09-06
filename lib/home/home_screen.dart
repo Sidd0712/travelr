@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:travelr/chat/chat_page.dart';
+import 'package:travelr/chat/create_chat.dart';
 import 'package:travelr/database/profile_model.dart';
 import 'package:travelr/database/profile_service.dart';
 import 'package:travelr/login/login.dart';
@@ -17,7 +19,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   Profile? user;
   String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
-  late Stream<List<Profile>> allUsers = Stream.value([]);
 
   @override
   void initState() {
@@ -29,15 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Profile? profile = await ProfilesDatabase.getProfileFromUID(uid);
     setState(() {
       user = profile;
-      allUsers = ProfilesDatabase.getProfiles();
     });
-
-    // allUsers.listen((profiles) {
-    //   print("Profiles fetched: ${profiles.length}");
-    //   for (var profile in profiles) {
-    //     print("User: ${profile.name}, UID: ${profile.uid}");
-    //   }
-    // });
   }
 
   void _signOut(BuildContext context) async {
@@ -50,11 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onItemTapped(int index) {
-    if (index == 1) {
-      setState(() {
-        allUsers = ProfilesDatabase.getProfiles();
-      });
-    }
     setState(() {
       _selectedIndex = index;
     });
@@ -80,6 +68,16 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
         leading: SizedBox(),
       ),
+      floatingActionButton: _selectedIndex == 1
+          ? FloatingActionButton(
+              shape: CircleBorder(),
+              backgroundColor: Colors.blue,
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => CreateChatPage()));
+              },
+              child: Icon(Icons.add_rounded, color: Colors.white, size: 36))
+          : null,
       body: IndexedStack(
         index: _selectedIndex,
         children: pages,
@@ -142,48 +140,71 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  StreamBuilder<List<Profile>> _chatScreen() {
-    return StreamBuilder<List<Profile>>(
-      stream: allUsers,
+  StreamBuilder<QuerySnapshot<Map<String, dynamic>>> _chatScreen() {
+    final currentUserID = FirebaseAuth.instance.currentUser!.uid;
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('chats')
+          .where('members', arrayContains: currentUserID)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('No chats available.'));
+        } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text('No groups available.'));
         } else {
-          List<Profile> profiles = snapshot.data!;
-          List<Profile> filteredProfiles = profiles.where((profile) {
-            return profile.uid != user?.uid;
-          }).toList();
-
-          if (filteredProfiles.isEmpty) {
-            return Center(child: Text('No chats available.'));
-          }
+          final groups = snapshot.data!.docs;
 
           return ListView.builder(
-            padding: EdgeInsets.all(16.0),
-            itemCount: filteredProfiles.length,
+            padding: const EdgeInsets.all(16.0),
+            itemCount: groups.length,
             itemBuilder: (context, index) {
-              Profile profile = filteredProfiles[index];
+              final group = groups[index].data();
+              final roomId = groups[index].id;
+              final groupName = group['groupName'] ?? "Unnamed Group";
+              final lastMessage = group['lastMessage'];
+              final lastMessageTime = group['lastMessageTime']
+                  .toDate()
+                  .toLocal()
+                  .toString()
+                  .split(' ')[1]
+                  .substring(0, 5);
 
               return Padding(
                 padding: const EdgeInsets.all(5.0),
                 child: ListTile(
                   title: Text(
-                    profile.name,
-                    style: TextStyle(fontSize: 20),
+                    groupName,
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                  subtitle: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          lastMessage,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text(lastMessageTime),
+                    ],
                   ),
                   leading: CircleAvatar(
                     backgroundColor: Colors.grey.shade700,
-                    child: Icon(Icons.person, color: Colors.white),
+                    child: Icon(Icons.group, color: Colors.white),
                   ),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ChatPage(profile),
+                        builder: (context) => ChatPage(
+                          roomID: roomId,
+                          groupName: groupName,
+                        ),
                       ),
                     );
                   },
