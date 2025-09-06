@@ -1,12 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:travelr/database/chat_service.dart';
-import 'package:travelr/database/profile_model.dart';
+import 'package:travelr/database/message_model.dart';
 
 class ChatPage extends StatefulWidget {
-  final Profile? profile;
-  const ChatPage(this.profile, {super.key});
+  final String roomID;
+  final String groupName;
+  const ChatPage({super.key, required this.roomID, required this.groupName});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -15,11 +15,24 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messagesController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  String? _currentUserID;
+  Map<String, String>? _members;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeChatData();
+  }
+
+  Future<void> _initializeChatData() async {
+    _currentUserID = FirebaseAuth.instance.currentUser?.uid ?? '';
+    _members = await ChatService.getMemberProfiles(widget.roomID);
+    setState(() {});
+  }
 
   void sendMessage() async {
     if (_messagesController.text.isNotEmpty) {
-      await ChatService.sendMessage(
-          widget.profile!.uid, _messagesController.text);
+      await ChatService.sendMessage(widget.roomID, _messagesController.text);
 
       _messagesController.clear();
 
@@ -40,7 +53,7 @@ class _ChatPageState extends State<ChatPage> {
         title: Column(children: [
           const SizedBox(height: 20),
           Text(
-            widget.profile?.name ?? "Unknown!",
+            widget.groupName,
             style: const TextStyle(
                 fontSize: 25, color: Colors.black, fontWeight: FontWeight.w500),
           ),
@@ -71,9 +84,12 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildMessagesList() {
-    String senderID = FirebaseAuth.instance.currentUser!.uid;
+    if (_currentUserID == null || _members == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return StreamBuilder(
-      stream: ChatService.getMessages(senderID, widget.profile!.uid),
+      stream: ChatService.getMessages(widget.roomID),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return const Center(child: Text("Error"));
@@ -83,7 +99,7 @@ class _ChatPageState extends State<ChatPage> {
           return const Center(child: Text("Loading..."));
         }
 
-        if (snapshot.data == null || snapshot.data!.docs.isEmpty) {
+        if (snapshot.data == null || snapshot.data!.isEmpty) {
           return const Center(child: Text("Start a chat..."));
         }
 
@@ -94,39 +110,75 @@ class _ChatPageState extends State<ChatPage> {
         return ListView(
           controller: _scrollController,
           children:
-              snapshot.data!.docs.map((doc) => _buildMessageItem(doc)).toList(),
+              snapshot.data!.map((msg) => _buildMessageItem(msg)).toList(),
         );
       },
     );
   }
 
-  Widget _buildMessageItem(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-
-    bool isSent = data["receiverID"] == widget.profile!.uid;
-    String message = data["message"];
+  Widget _buildMessageItem(Message data) {
+    bool isSent = data.senderID == _currentUserID;
+    String message = data.message;
+    print(data.timestamp.toDate().toLocal().toString());
 
     return Align(
       alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSent ? Colors.blue : Colors.grey[300],
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(15),
-            topRight: const Radius.circular(15),
-            bottomLeft: isSent ? const Radius.circular(15) : Radius.zero,
-            bottomRight: isSent ? Radius.zero : const Radius.circular(15),
+      child: Column(
+        crossAxisAlignment:
+            isSent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          if (!isSent)
+            Padding(
+              padding: const EdgeInsets.only(left: 12.0, bottom: 2),
+              child: Text(
+                _members?[data.senderID] ?? "Unknown Sender",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ),
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+            decoration: BoxDecoration(
+              color: isSent ? Colors.blue : Colors.grey[300],
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(15),
+                topRight: const Radius.circular(15),
+                bottomLeft: isSent ? const Radius.circular(15) : Radius.zero,
+                bottomRight: isSent ? Radius.zero : const Radius.circular(15),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment:
+                  isSent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                Text(
+                  message,
+                  style: TextStyle(
+                    color: isSent ? Colors.white : Colors.black,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  data.timestamp
+                      .toDate()
+                      .toLocal()
+                      .toString()
+                      .split(' ')[1]
+                      .substring(0, 5),
+                  style: TextStyle(
+                    color: isSent ? Colors.white70 : Colors.black54,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        child: Text(
-          message,
-          style: TextStyle(
-            color: isSent ? Colors.white : Colors.black,
-            fontSize: 16,
-          ),
-        ),
+        ],
       ),
     );
   }
