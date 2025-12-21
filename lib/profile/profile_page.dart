@@ -26,6 +26,8 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       userProfile = profile;
     });
+    print(userProfile);
+    print(uid);
   }
 
   Future<void> _signOut(BuildContext context) async {
@@ -123,7 +125,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 8),
                     SizedBox(
                       height: 120,
                       child: ListView(
@@ -135,7 +137,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 15),
                     ElevatedButton(
                       onPressed: () => _signOut(context),
                       style: ElevatedButton.styleFrom(

@@ -15,14 +15,14 @@ class CreateChatPage extends StatefulWidget {
 class _CreateChatPageState extends State<CreateChatPage> {
   final String currentUserID = FirebaseAuth.instance.currentUser!.uid;
   final Set<String> participants = {};
-  late Stream<List<Profile>> allUsers = Stream.value([]);
+  late Stream<Map<String, String>> allUsers = Stream.value({});
   String searchQuery = "";
   final TextEditingController groupNameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    allUsers = ProfilesDatabase.getProfiles();
+    allUsers = ProfilesDatabase.getProfilesPartial();
     participants.add(currentUserID);
   }
 
@@ -126,44 +126,43 @@ class _CreateChatPageState extends State<CreateChatPage> {
               },
             ),
             Expanded(
-              child: StreamBuilder<List<Profile>>(
-                stream: allUsers,
+              child: StreamBuilder<Map<String, String>>(
+                stream: allUsers, // your existing getProfilesPartial stream
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
                     return Center(child: Text("Error: ${snapshot.error}"));
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text("No users found"));
+                    return const Center(child: Text("No users found"));
                   }
 
-                  List<Profile> profiles = snapshot.data!;
-                  List<Profile> filtered = profiles.where((p) {
-                    if (p.uid == currentUserID) return false;
-
-                    final lowerName = p.name.toLowerCase().trim();
-                    final words = lowerName.split(RegExp(r"\s+"));
-                    final query = searchQuery.toLowerCase().trim();
-
-                    return words.any((word) => word.startsWith(query));
+                  final profilesMap = snapshot.data!;
+                  final filtered = profilesMap.entries.where((entry) {
+                    final uid = entry.key;
+                    final name = entry.value.toLowerCase();
+                    if (uid == currentUserID) return false;
+                    return name.contains(searchQuery);
                   }).toList();
 
                   return ListView.builder(
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
-                      final profile = filtered[index];
-                      final isSelected = participants.contains(profile.uid);
+                      final uid = filtered[index].key;
+                      final name = filtered[index].value;
+                      final isSelected = participants.contains(uid);
 
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor:
                               isSelected ? Colors.blue : Colors.grey.shade700,
                           child: isSelected
-                              ? Icon(Icons.check_rounded, color: Colors.white)
-                              : Icon(Icons.person, color: Colors.white),
+                              ? const Icon(Icons.check_rounded,
+                                  color: Colors.white)
+                              : const Icon(Icons.person, color: Colors.white),
                         ),
-                        title: Text(profile.name),
-                        onTap: () => _toggleSelection(profile.uid),
+                        title: Text(name),
+                        onTap: () => _toggleSelection(uid),
                       );
                     },
                   );

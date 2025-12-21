@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -60,8 +59,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final List<Widget> pages = [
       _homeScreen(),
       _chatScreen(),
-      const FriendsPage(),
-      const ProfilePage(),
+      FriendsPage(),
+      ProfilePage(),
     ];
 
     return Scaffold(
@@ -87,6 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
@@ -178,6 +178,189 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Center _homeScreen() =>
-      Center(child: Text("Home Screen", style: TextStyle(fontSize: 24)));
+  Widget _homeScreen() {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80), // safe bottom padding
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // --- Currently Travelling With ---
+          const Text(
+            "Currently Travelling With",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: screenWidth * 0.08,
+                        backgroundColor: Colors.blueAccent,
+                        child: Text(
+                          "Y",
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.06,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Text(
+                        "Yash Ghogale",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Route: Ghatkopar → Andheri",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Expanded(
+                        child: Text(
+                          "Next Rendezvous: Ghatkopar Metro Station",
+                          style: TextStyle(fontSize: 16),
+                          softWrap: true,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        "ETA: 7 mins",
+                        style: TextStyle(fontSize: 16, color: Colors.blue),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // --- Current Location ---
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Icon(Icons.location_on, color: Colors.red),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          "Current Location: Vikhroli Station",
+                          style: TextStyle(fontSize: 16),
+                          softWrap: true,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // --- Side Note / Chef's Note ---
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Icon(Icons.sticky_note_2, color: Colors.orange),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            "Running a few mins late, will join at the back entrance.",
+                            style: TextStyle(fontSize: 15),
+                            softWrap: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 30),
+
+          // --- Scheduled Commutes ---
+          const Text(
+            "Scheduled Commutes Today",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: ListTile(
+              leading: const Icon(Icons.schedule, color: Colors.blue),
+              title: const Text("Andheri → Mulund"),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text("Companion: Siddhant Patel"),
+                  Text("Start Time: 5:00 PM"),
+                ],
+              ),
+              trailing: const Text("in 17 hrs"),
+            ),
+          ),
+
+          const SizedBox(height: 30),
+
+          // --- Nearby Travellers ---
+          const Text(
+            "Nearby Travellers",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: const [
+              CircleAvatar(
+                backgroundColor: Colors.redAccent,
+                child: Text("R", style: TextStyle(color: Colors.white)),
+              ),
+              SizedBox(width: 8),
+              CircleAvatar(
+                backgroundColor: Colors.green,
+                child: Text("P", style: TextStyle(color: Colors.white)),
+              ),
+              SizedBox(width: 8),
+              CircleAvatar(
+                backgroundColor: Colors.orange,
+                child: Text("A", style: TextStyle(color: Colors.white)),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  "3 people are travelling from Mulund → Andheri now",
+                  style: TextStyle(fontSize: 16),
+                  softWrap: true,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
 }

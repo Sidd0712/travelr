@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:travelr/database/profile_model.dart';
+import 'package:travelr/database/profile_service.dart';
 
 class FriendsPage extends StatefulWidget {
   const FriendsPage({super.key});
@@ -8,13 +11,19 @@ class FriendsPage extends StatefulWidget {
 }
 
 class _FriendsPageState extends State<FriendsPage> {
-  List<String> suggestions = ["Raj", "Neha", "Nikhil", "Dravid", "Mona"];
-  List<String> friendRequests = ["Atharva", "Rahul", "Sneha"];
+  Map<String, String> suggestions = {};
+  Map<String, String> friendRequests = {};
+
+  @override
+  void initState() {
+    super.initState();
+    final String currentUserID = FirebaseAuth.instance.currentUser!.uid;
+    _loadData(currentUserID);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -31,8 +40,9 @@ class _FriendsPageState extends State<FriendsPage> {
               scrollDirection: Axis.horizontal,
               itemCount: suggestions.length,
               itemBuilder: (context, index) {
-                final user = suggestions[index];
-                return _buildSuggestionCard(user);
+                final uid = suggestions.keys.elementAt(index);
+                final name = suggestions[uid]!;
+                return _buildSuggestionCard(uid, name);
               },
             ),
           ),
@@ -51,8 +61,9 @@ class _FriendsPageState extends State<FriendsPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: friendRequests.length,
                     itemBuilder: (context, index) {
-                      final user = friendRequests[index];
-                      return _buildRequestCard(user, index);
+                      final uid = friendRequests.keys.elementAt(index);
+                      final name = friendRequests[uid]!;
+                      return _buildRequestCard(uid, name);
                     },
                   ),
           ),
@@ -61,7 +72,7 @@ class _FriendsPageState extends State<FriendsPage> {
     );
   }
 
-  Widget _buildSuggestionCard(String user) {
+  Widget _buildSuggestionCard(String uid, String name) {
     return Container(
       width: 160,
       margin: const EdgeInsets.only(left: 16, bottom: 8),
@@ -77,7 +88,7 @@ class _FriendsPageState extends State<FriendsPage> {
                 radius: 40,
                 backgroundColor: Colors.blue.shade300,
                 child: Text(
-                  user[0].toUpperCase(),
+                  name[0].toUpperCase(),
                   style: const TextStyle(
                       color: Colors.white,
                       fontSize: 30,
@@ -85,21 +96,25 @@ class _FriendsPageState extends State<FriendsPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              Text(user,
+              Text(name,
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               ElevatedButton.icon(
-                icon: const Icon(Icons.person_add_alt_1),
-                label: const Text("Add"),
+                icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
+                label: const Text("Add", style: TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: () {
+                onPressed: () async {
+                  final currentUserID = FirebaseAuth.instance.currentUser!.uid;
+
+                  await ProfilesDatabase.sendFriendRequest(currentUserID, uid);
+
                   setState(() {
-                    suggestions.remove(user);
+                    suggestions.remove(uid);
                   });
                 },
               ),
@@ -110,7 +125,7 @@ class _FriendsPageState extends State<FriendsPage> {
     );
   }
 
-  Widget _buildRequestCard(String user, int index) {
+  Widget _buildRequestCard(String uid, String name) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -120,27 +135,31 @@ class _FriendsPageState extends State<FriendsPage> {
         leading: CircleAvatar(
           backgroundColor: Colors.blue.shade400,
           child: Text(
-            user[0].toUpperCase(),
+            name[0].toUpperCase(),
             style: const TextStyle(color: Colors.white, fontSize: 20),
           ),
         ),
-        title: Text(user, style: const TextStyle(fontSize: 18)),
+        title: Text(name, style: const TextStyle(fontSize: 18)),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
               icon: const Icon(Icons.close, color: Colors.red),
-              onPressed: () {
+              onPressed: () async {
+                final currentUserID = FirebaseAuth.instance.currentUser!.uid;
+                await ProfilesDatabase.rejectFriendRequest(currentUserID, uid);
                 setState(() {
-                  friendRequests.removeAt(index);
+                  friendRequests.remove(uid);
                 });
               },
             ),
             IconButton(
               icon: const Icon(Icons.check, color: Colors.green),
-              onPressed: () {
+              onPressed: () async {
+                final currentUserID = FirebaseAuth.instance.currentUser!.uid;
+                await ProfilesDatabase.acceptFriendRequest(currentUserID, uid);
                 setState(() {
-                  friendRequests.removeAt(index);
+                  friendRequests.remove(uid);
                 });
               },
             ),
@@ -148,5 +167,32 @@ class _FriendsPageState extends State<FriendsPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _loadData(String currentUserID) async {
+    final String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
+    Profile? user = await ProfilesDatabase.getProfileFromUID(uid);
+    var allProfiles = await ProfilesDatabase.getProfilesPartial().first;
+    var friends = user!.friends;
+
+    Map<String, String> requestsMap = {};
+    for (String requestUid in user.friendRequests) {
+      Profile? profile = await ProfilesDatabase.getProfileFromUID(requestUid);
+      if (profile != null) {
+        requestsMap[requestUid] = profile.name;
+      }
+    }
+
+    setState(() {
+      suggestions = Map.from(allProfiles)
+        ..removeWhere((key, value) =>
+            friends.contains(key) ||
+            key == uid ||
+            requestsMap.containsKey(key));
+      friendRequests = requestsMap;
+    });
+
+    print("Suggestions: $suggestions");
+    print("Friend Requests: $friendRequests");
   }
 }

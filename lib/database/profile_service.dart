@@ -14,10 +14,48 @@ class ProfilesDatabase {
     }
   }
 
-  static Stream<List<Profile>> getProfiles() {
-    return usersCollection.snapshots().map((snapshot) => snapshot.docs
-        .map((doc) => Profile.fromJson(doc.data() as Map<String, dynamic>))
-        .toList());
+  static Stream<Map<String, String>> getProfilesPartial() {
+    return usersCollection.snapshots().map((snapshot) {
+      final Map<String, String> partialProfiles = {};
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final uid = data['uid'] as String;
+        final name = data['name'] as String;
+        partialProfiles[uid] = name;
+      }
+      return partialProfiles;
+    });
+  }
+
+  static Future<Profile?> getProfileFromUID(String uid) async {
+    try {
+      DocumentSnapshot doc = await usersCollection.doc(uid).get();
+      if (doc.exists && doc.data() != null) {
+        return Profile.fromJson(doc.data() as Map<String, dynamic>);
+      } else {
+        print("Profile not found for UID: $uid");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching user profile: $e");
+      return null;
+    }
+  }
+
+  static Future<Map<String, String>> getProfilePartialFromUID(
+      String uid) async {
+    try {
+      final doc = await usersCollection.doc(uid).get();
+      if (!doc.exists || doc.data() == null) return {};
+
+      final data = doc.data() as Map<String, dynamic>;
+      final name = data['name'] as String;
+
+      return {uid: name};
+    } catch (e) {
+      print("Error fetching partial profile: $e");
+      return {};
+    }
   }
 
   static Future<void> updateProfile(Profile user) async {
@@ -38,19 +76,58 @@ class ProfilesDatabase {
     }
   }
 
-  static Future<Profile?> getProfileFromUID(String uid) async {
+  static Future<void> sendFriendRequest(String fromUID, String toUID) async {
     try {
-      DocumentSnapshot doc = await usersCollection.doc(uid).get();
-
-      if (doc.exists && doc.data() != null) {
-        return Profile.fromJson(doc.data() as Map<String, dynamic>);
-      } else {
-        print("Profile not found for UID: $uid");
-        return null;
-      }
+      await usersCollection.doc(toUID).update({
+        'friendRequests': FieldValue.arrayUnion([fromUID])
+      });
     } catch (e) {
-      print("Error fetching user profile: $e");
-      return null;
+      print("Error sending friend request: $e");
+    }
+    try {
+      await usersCollection.doc(fromUID).update({
+        'friendRequested': FieldValue.arrayUnion([toUID])
+      });
+
+      print("Friend request sent from $fromUID to $toUID");
+    } catch (e) {
+      print("Error sending friend request: $e");
+    }
+  }
+
+  static Future<void> acceptFriendRequest(
+      String currentUID, String fromUID) async {
+    try {
+      await usersCollection.doc(currentUID).update({
+        'friendRequests': FieldValue.arrayRemove([fromUID]),
+        'friends': FieldValue.arrayUnion([fromUID])
+      });
+
+      await usersCollection.doc(fromUID).update({
+        'friendRequested': FieldValue.arrayRemove([currentUID]),
+        'friends': FieldValue.arrayUnion([currentUID])
+      });
+
+      print("$currentUID accepted friend request from $fromUID");
+    } catch (e) {
+      print("Error accepting friend request: $e");
+    }
+  }
+
+  static Future<void> rejectFriendRequest(
+      String currentUID, String fromUID) async {
+    try {
+      await usersCollection.doc(currentUID).update({
+        'friendRequests': FieldValue.arrayRemove([fromUID])
+      });
+
+      await usersCollection.doc(fromUID).update({
+        'friendRequested': FieldValue.arrayRemove([currentUID])
+      });
+
+      print("$currentUID rejected friend request from $fromUID");
+    } catch (e) {
+      print("Error rejecting friend request: $e");
     }
   }
 }

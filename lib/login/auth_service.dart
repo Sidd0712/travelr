@@ -33,14 +33,16 @@ class AuthService {
       String genderPreference = data['genderPreference'];
 
       Profile newUser = Profile(
-        uid: uid,
-        name: name,
-        gender: gender,
-        phoneNumber: phone,
-        preference: genderPreference,
-        start: start,
-        end: end,
-      );
+          uid: uid,
+          name: name,
+          gender: gender,
+          phoneNumber: phone,
+          preference: genderPreference,
+          start: start,
+          end: end,
+          friends: List.empty(),
+          friendRequests: List.empty(),
+          friendRequested: List.empty());
 
       await ProfilesDatabase.addProfile(newUser);
 

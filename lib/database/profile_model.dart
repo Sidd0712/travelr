@@ -8,6 +8,9 @@ class Profile {
   String preference;
   GeoPoint start;
   GeoPoint end;
+  List<String> friends;
+  List<String> friendRequests;
+  List<String> friendRequested;
 
   Profile({
     required this.uid,
@@ -17,6 +20,9 @@ class Profile {
     required this.preference,
     required this.start,
     required this.end,
+    required this.friends,
+    required this.friendRequests,
+    required this.friendRequested,
   });
 
   Map<String, dynamic> toJson() => {
@@ -27,6 +33,9 @@ class Profile {
         'preference': preference,
         'start': start,
         'end': end,
+        'friends': friends,
+        'friendRequests': friendRequests,
+        'friendRequested': friendRequested
       };
 
   factory Profile.fromJson(Map<String, dynamic> json) => Profile(
@@ -37,5 +46,14 @@ class Profile {
         preference: json['preference'],
         start: json['start'],
         end: json['end'],
+        friends: (json['friends'] as List<dynamic>)
+            .map((e) => e.toString())
+            .toList(),
+        friendRequests: (json['friendRequests'] as List<dynamic>)
+            .map((e) => e.toString())
+            .toList(),
+        friendRequested: (json['friendRequested'] as List<dynamic>)
+            .map((e) => e.toString())
+            .toList(),
       );
 }
