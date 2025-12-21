@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:travelr/login/splash.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:travelr/recommender/recommendation_model.dart';
+import 'package:travelr/recommender/recommender_carousel.dart';
 import 'login/firebase_options.dart';
 
 void main() async {
@@ -20,6 +22,92 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   // This widget is the root of your application.
+
+  static final List<Recommendation> mockRecommendations = [
+    Recommendation(
+      name: "Zeel Bhadra",
+      gender: "Female",
+      age: 20,
+      overlapDist: 2.0,
+      overlapPercent: 0.27,
+      meetPoint: "Andheri Station",
+      splitPoint: "DJSCE",
+      segments: [
+        RouteSegment(
+          mode: "Auto",
+          from: "Andheri Station",
+          to: "DJSCE",
+          startTime: const TimeOfDay(hour: 07, minute: 45),
+          endTime: const TimeOfDay(hour: 08, minute: 00),
+        ),
+      ],
+    ),
+    Recommendation(
+      name: "Yash Ghogale",
+      gender: "Male",
+      age: 21,
+      overlapDist: 12.1,
+      overlapPercent: 0.56,
+      meetPoint: "Vikhroli Station",
+      splitPoint: "DJSCE",
+      segments: [
+        RouteSegment(
+          mode: "Train",
+          from: "Vikhroli Train Station",
+          to: "Ghatkopar",
+          startTime: const TimeOfDay(hour: 07, minute: 05),
+          endTime: const TimeOfDay(hour: 07, minute: 15),
+        ),
+        RouteSegment(
+          mode: "Metro",
+          from: "Ghatkopar",
+          to: "Andheri Station",
+          startTime: const TimeOfDay(hour: 07, minute: 20),
+          endTime: const TimeOfDay(hour: 07, minute: 40),
+        ),
+        RouteSegment(
+          mode: "Auto",
+          from: "Andheri Station",
+          to: "DJSCE",
+          startTime: const TimeOfDay(hour: 07, minute: 45),
+          endTime: const TimeOfDay(hour: 08, minute: 00),
+        ),
+      ],
+    ),
+    Recommendation(
+      name: "Rhea Sanghvi",
+      gender: "Female",
+      age: 20,
+      overlapDist: 17.6,
+      overlapPercent: 0.83,
+      meetPoint: "Mulund Station",
+      splitPoint: "DJSCE",
+      segments: [
+        RouteSegment(
+          mode: "Train",
+          from: "Mulund Station",
+          to: "Ghatkopar",
+          startTime: const TimeOfDay(hour: 06, minute: 55),
+          endTime: const TimeOfDay(hour: 07, minute: 15),
+        ),
+        RouteSegment(
+          mode: "Metro",
+          from: "Ghatkopar",
+          to: "Andheri Station",
+          startTime: const TimeOfDay(hour: 07, minute: 20),
+          endTime: const TimeOfDay(hour: 07, minute: 40),
+        ),
+        RouteSegment(
+          mode: "Auto",
+          from: "Andheri Station",
+          to: "DJSCE",
+          startTime: const TimeOfDay(hour: 07, minute: 45),
+          endTime: const TimeOfDay(hour: 08, minute: 00),
+        ),
+      ],
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -44,7 +132,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: const SplashScreenPage(title: "travelr"),
+      home: RecommenderCarousel(recommendations: mockRecommendations),
     );
   }
 }
