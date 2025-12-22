@@ -29,7 +29,7 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
               child: Container(
-                color: const Color.fromARGB(255, 11, 131, 216)
+                color: const Color.fromARGB(255, 0, 0, 0)
                     .withValues(alpha: 0.55),
               ),
             ),
@@ -47,7 +47,8 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                     "Travel Buddies Found",
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 22,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
 
@@ -65,7 +66,7 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                       itemBuilder: (context, index) {
                         return Padding(
                           padding:
-                              const EdgeInsets.symmetric(horizontal: 8),
+                              const EdgeInsets.symmetric(horizontal: 12),
                           child: RecommendationCard(
                             recommendation:
                                 widget.recommendations[index],
@@ -167,7 +168,6 @@ class _RecommendationCardState extends State<RecommendationCard> {
       decoration: BoxDecoration(
         color: const Color(0xFF111111),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.blue),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -175,18 +175,65 @@ class _RecommendationCardState extends State<RecommendationCard> {
           children: [
             // Map placeholder
             Container(
-              height: 160,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              alignment: Alignment.center,
-              child: const Text(
-                "Map Preview",
-                style: TextStyle(color: Colors.black54),
+  height: 160,
+  width: double.infinity,
+  decoration: BoxDecoration(
+  color: const Color.fromARGB(255, 255, 255, 255),
+  borderRadius: BorderRadius.circular(22),
+  boxShadow: [
+    // Primary soft shadow (depth)
+    BoxShadow(
+      color: Colors.black.withOpacity(0.45),
+      blurRadius: 20,
+      offset: const Offset(0, 10),
+    ),
+
+    // Secondary subtle lift (separation)
+    BoxShadow(
+      color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.25),
+      blurRadius: 8,
+      offset: const Offset(0, 4),
+    ),
+  ],
+),
+  child: Stack(
+    children: [
+      Positioned.fill(
+        child: Opacity(
+          opacity: 0.08,
+          child: Icon(
+            Icons.map,
+            size: 140,
+            color: Colors.black,
+          ),
+        ),
+      ),
+
+      // Center label
+      Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(
+              Icons.location_on,
+              color: Colors.blue,
+              size: 28,
+            ),
+            SizedBox(height: 6),
+            Text(
+              "Route Preview",
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
             ),
+          ],
+        ),
+      ),
+    ],
+  ),
+),
 
             const SizedBox(height: 16),
            Center(
@@ -228,7 +275,7 @@ class _RecommendationCardState extends State<RecommendationCard> {
               "${widget.recommendation.gender}  ${widget.recommendation.age}",
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 13,
+                fontSize: 12,
               ),
             ),
           ],
@@ -241,14 +288,6 @@ class _RecommendationCardState extends State<RecommendationCard> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-              Text(
-                "Shared Route · ${widget.recommendation.overlapDist.toStringAsFixed(1)} km",
-                style: const TextStyle(
-                color: Colors.green,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
 
           const SizedBox(height: 6),
 
@@ -264,14 +303,15 @@ class _RecommendationCardState extends State<RecommendationCard> {
                     valueColor:
                       const AlwaysStoppedAnimation<Color>(Colors.green),
                     ),
-                  Text(
-                    "${(widget.recommendation.overlapPercent * 100).toInt()}%",
-                    style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                   Text(
+                      "Shared Route : ${widget.recommendation.overlapDist.toStringAsFixed(1)} km",
+                      style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
+                      ),
                     ),
-                  ),
                 ],
               ),
               ),
@@ -282,11 +322,11 @@ class _RecommendationCardState extends State<RecommendationCard> {
             // Meet / Split
             Text(
               "Meet: ${widget.recommendation.meetPoint}",
-              style: const TextStyle(color: Colors.white70),
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
             ),
             Text(
               "Split: ${widget.recommendation.splitPoint}",
-              style: const TextStyle(color: Colors.white70),
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
             ),
 
             const SizedBox(height: 12),
@@ -304,7 +344,7 @@ class _RecommendationCardState extends State<RecommendationCard> {
                   style: TextStyle(
                     color: Colors.blue,
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
