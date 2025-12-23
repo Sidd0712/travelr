@@ -19,6 +19,7 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    final activeRecommendation = widget.recommendations[currentIndex];
     print("Recommendations count: ${widget.recommendations.length}");
     return Material(
       color: Colors.transparent,
@@ -99,31 +100,34 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                   ),
 
                   const SizedBox(height: 20),
-
                   TextButton(
-                    onPressed: () {},
-                    style: const ButtonStyle(
-                      fixedSize:
-                          WidgetStatePropertyAll(Size(200, 50)),
-                      backgroundColor:
-                          WidgetStatePropertyAll(Colors.blue),
-                      shape: WidgetStatePropertyAll(
-                        RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.all(Radius.circular(10)),
-                        ),
-                      ),
-                    ),
-                    child: const Text(
-                      "Send Request",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
+                    onPressed: activeRecommendation.isFriend
+                    ? () {
+                    Navigator.of(context).pop();
+                    }
+                    : () {// TODO: Send Request logic (later)
+                    },
+
+                style: const ButtonStyle(
+                fixedSize: WidgetStatePropertyAll(Size(200, 50)),
+                backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                shape: WidgetStatePropertyAll(
+                RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
+            ),
+          ),
+
+            child: Text(
+            activeRecommendation.isFriend ? "Close": "Send Request",
+            style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    ],
+  ),
             ),
           ),
         ],
@@ -175,20 +179,18 @@ class _RecommendationCardState extends State<RecommendationCard> {
           children: [
             // Map placeholder
             Container(
-  height: 160,
-  width: double.infinity,
-  decoration: BoxDecoration(
-  color: const Color.fromARGB(255, 255, 255, 255),
-  borderRadius: BorderRadius.circular(22),
-  boxShadow: [
-    // Primary soft shadow (depth)
-    BoxShadow(
-      color: Colors.black.withOpacity(0.45),
-      blurRadius: 20,
-      offset: const Offset(0, 10),
-    ),
+            height: 160,
+            width: double.infinity,
+            decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 255, 255, 255),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+            BoxShadow(
+            color: Colors.black.withOpacity(0.45),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
 
-    // Secondary subtle lift (separation)
     BoxShadow(
       color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.25),
       blurRadius: 8,
@@ -238,12 +240,12 @@ class _RecommendationCardState extends State<RecommendationCard> {
             const SizedBox(height: 16),
            Center(
             child: Row(
-      mainAxisSize: MainAxisSize.min, 
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
+            mainAxisSize: MainAxisSize.min, 
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
         CircleAvatar(
-  radius: 22,
-  backgroundColor: Colors.grey.shade300,
+          radius: 22,
+          backgroundColor: Colors.grey.shade300,
 
   // When you have an image URL later, this line will activate
   // backgroundImage: NetworkImage(widget.recommendation.profileImageUrl),
@@ -283,6 +285,17 @@ class _RecommendationCardState extends State<RecommendationCard> {
       ],
     ),
   ),
+  const SizedBox(height: 6),
+
+    if (widget.recommendation.canShowPhoneNumber && widget.recommendation.phoneNumber != null)
+    Text(
+      widget.recommendation.phoneNumber!,
+      style: const TextStyle(
+      color: Colors.white,
+      fontSize: 13,
+      fontWeight: FontWeight.w500,
+      ),
+    ),
           const SizedBox(height: 16),
             // Overlap pill + progress bar
             Column(
@@ -317,6 +330,21 @@ class _RecommendationCardState extends State<RecommendationCard> {
               ),
               ],
             ),
+            const SizedBox(height: 12),
+            if (widget.recommendation.canShowTransportModes)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: widget.recommendation.segments.map((segment) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Icon(
+                  _iconForMode(segment.mode),
+                  size: 20,
+                  color: Colors.white70,
+                ),
+              );
+            }).toList(),
+            ),
 
              const SizedBox(height: 12),
             // Meet / Split
@@ -330,27 +358,35 @@ class _RecommendationCardState extends State<RecommendationCard> {
             ),
 
             const SizedBox(height: 12),
-
-            // View Details
-            if (!showDetails)
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    showDetails = true;
-                  });
-                },
-                child: const Text(
-                  "View Details",
-                  style: TextStyle(
-                    color: Colors.blue,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+            if (widget.recommendation.canShowETA &&
+              widget.recommendation.etaAtMeetPoint != null)
+              Text(
+                "ETA at meet point: ${widget.recommendation.etaAtMeetPoint!.format(context)}",
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
                   ),
                 ),
-              ),
+            const SizedBox(height: 12),
+
+            // View Details
+            if (!showDetails && widget.recommendation.canShowRouteSegments)
+            GestureDetector(
+              onTap: () {
+              setState(() => showDetails = true);
+              },
+            child: const Text(
+            "View Details",
+            style: TextStyle(
+              color: Colors.blue,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
 
             // Expanded details
-            if (showDetails)
+            if (showDetails && widget.recommendation.canShowRouteSegments)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
