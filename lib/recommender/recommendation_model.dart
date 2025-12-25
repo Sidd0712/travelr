@@ -18,16 +18,9 @@ class Recommendation {
   final String meetPoint;
   final String splitPoint;
   final List<RouteSegment> segments;
-  final JourneyMode journeyMode;
-  final bool isFriend;
   // Friend-only
   final String? phoneNumber;
   final TimeOfDay? etaAtMeetPoint;
-  bool get canShowRouteSegments =>
-    journeyMode == JourneyMode.public || isFriend;
-  bool get canShowTransportModes =>
-    journeyMode == JourneyMode.public || isFriend;
-  bool get canShowPhoneNumber => isFriend;
   bool get canShowETA => true;
 
 
@@ -40,8 +33,6 @@ class Recommendation {
     required this.meetPoint,
     required this.splitPoint,
     required this.segments,
-    required this.journeyMode,
-    required this.isFriend,
     this.phoneNumber,
     this.etaAtMeetPoint,
   });
@@ -58,8 +49,6 @@ class Recommendation {
       segments: (json['segments'] as List)
           .map((e) => RouteSegment.fromJson(e))
           .toList(),
-      journeyMode: JourneyMode.public,
-      isFriend: false,//change later
     );
   }
 }

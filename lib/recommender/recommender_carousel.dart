@@ -16,10 +16,15 @@ class RecommenderCarousel extends StatefulWidget {
 
 class _RecommenderCarouselState extends State<RecommenderCarousel> {
   int currentIndex = 0;
+  bool isFriend = false;
+  bool allowTransportModes = true;
 
   @override
   Widget build(BuildContext context) {
     final activeRecommendation = widget.recommendations[currentIndex];
+    // will replace with API logic later
+    isFriend = activeRecommendation.phoneNumber != null;
+    allowTransportModes = activeRecommendation.segments.isNotEmpty;
     print("Recommendations count: ${widget.recommendations.length}");
     return Material(
       color: Colors.transparent,
@@ -69,8 +74,9 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                           padding:
                               const EdgeInsets.symmetric(horizontal: 12),
                           child: RecommendationCard(
-                            recommendation:
-                                widget.recommendations[index],
+                            recommendation: widget.recommendations[index],
+                            allowTransportModes: allowTransportModes,
+                            allowPhoneNumber: isFriend,
                           ),
                         );
                       },
@@ -79,7 +85,7 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
 
                   const SizedBox(height: 12),
 
-                  Row(
+                  Row( //page indicator
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       widget.recommendations.length,
@@ -101,11 +107,10 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
 
                   const SizedBox(height: 20),
                   TextButton(
-                    onPressed: activeRecommendation.isFriend
+                    onPressed: isFriend
                     ? () {
-                    Navigator.of(context).pop();
                     }
-                    : () {// TODO: Send Request logic (later)
+                    : () { // TODO: Send Request logic (later)
                     },
 
                 style: const ButtonStyle(
@@ -119,7 +124,7 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
           ),
 
             child: Text(
-            activeRecommendation.isFriend ? "Close": "Send Request",
+              isFriend ? "Close": "Send Request",
             style: const TextStyle(
             color: Colors.white,
             fontSize: 16,
@@ -138,10 +143,15 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
 
 class RecommendationCard extends StatefulWidget {
   final Recommendation recommendation;
+  final bool allowTransportModes;
+  final bool allowPhoneNumber;
+
 
   const RecommendationCard({
     super.key,
     required this.recommendation,
+    required this.allowTransportModes,
+    required this.allowPhoneNumber,
   });
 
   @override
@@ -151,6 +161,11 @@ class RecommendationCard extends StatefulWidget {
 
 class _RecommendationCardState extends State<RecommendationCard> {
   bool showDetails = false;
+  void _toggleDetails() {
+  setState(() {
+    showDetails = !showDetails;
+  });
+}
 
   IconData _iconForMode(String mode) {
     switch (mode.toLowerCase()) {
@@ -186,13 +201,13 @@ class _RecommendationCardState extends State<RecommendationCard> {
             borderRadius: BorderRadius.circular(22),
             boxShadow: [
             BoxShadow(
-            color: Colors.black.withOpacity(0.45),
+            color: Colors.black.withValues(alpha: 0.25),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
 
     BoxShadow(
-      color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.25),
+      color: const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.25),
       blurRadius: 8,
       offset: const Offset(0, 4),
     ),
@@ -287,7 +302,7 @@ class _RecommendationCardState extends State<RecommendationCard> {
   ),
   const SizedBox(height: 6),
 
-    if (widget.recommendation.canShowPhoneNumber && widget.recommendation.phoneNumber != null)
+    if (widget.allowPhoneNumber && widget.recommendation.phoneNumber != null)
     Text(
       widget.recommendation.phoneNumber!,
       style: const TextStyle(
@@ -312,7 +327,7 @@ class _RecommendationCardState extends State<RecommendationCard> {
                   LinearProgressIndicator(
                     value: widget.recommendation.overlapPercent,
                     minHeight: 18, // pill height
-                    backgroundColor: Colors.green.withOpacity(0.25),
+                    backgroundColor: Colors.green.withValues(alpha: 0.25),
                     valueColor:
                       const AlwaysStoppedAnimation<Color>(Colors.green),
                     ),
@@ -331,7 +346,7 @@ class _RecommendationCardState extends State<RecommendationCard> {
               ],
             ),
             const SizedBox(height: 12),
-            if (widget.recommendation.canShowTransportModes)
+            if (widget.allowTransportModes) 
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: widget.recommendation.segments.map((segment) {
@@ -368,84 +383,109 @@ class _RecommendationCardState extends State<RecommendationCard> {
                   ),
                 ),
             const SizedBox(height: 12),
+            // COLLAPSED STATE → View Details
+if (!showDetails && widget.allowTransportModes)
+  TextButton(
+    onPressed: _toggleDetails,
+    style: const ButtonStyle(
+      overlayColor: WidgetStatePropertyAll(Colors.transparent),
+      padding: WidgetStatePropertyAll(
+        EdgeInsets.symmetric(vertical: 6),
+      ),
+    ),
+    child: const Text(
+      "View Details",
+      style: TextStyle(
+        color: Colors.blue,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
+    ),
+  ),
 
-            // View Details
-            if (!showDetails && widget.recommendation.canShowRouteSegments)
-            GestureDetector(
-              onTap: () {
-              setState(() => showDetails = true);
-              },
-            child: const Text(
-            "View Details",
-            style: TextStyle(
-              color: Colors.blue,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
+          
+  //         if (widget.allowTransportModes)
+  // TextButton(
+  //   onPressed: _toggleDetails,
+  //   style: const ButtonStyle(
+  //     overlayColor: WidgetStatePropertyAll(Colors.transparent),
+  //     padding: WidgetStatePropertyAll(
+  //       EdgeInsets.symmetric(vertical: 6),
+  //     ),
+  //   ),
+  //   child: Text(
+  //     showDetails ? "Hide Details" : "View Details",
+  //     style: const TextStyle(
+  //       color: Colors.blue,
+  //       fontSize: 14,
+  //       fontWeight: FontWeight.w500,
+  //     ),
+  //   ),
+  // ),
 
-            // Expanded details
-            if (showDetails && widget.recommendation.canShowRouteSegments)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 12),
-                  ...widget.recommendation.segments.map((segment) {
-                    return Padding(
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _iconForMode(segment.mode),
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              "${segment.mode}: ${segment.from} → ${segment.to}",
-                              style: const TextStyle(
-                                  color: Colors.white),
-                            ),
-                          ),
-                          Text(
-                            "${segment.startTime.format(context)} - ${segment.endTime.format(context)}",
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        showDetails = false;
-                      });
-                    },
-                    child: const Center(
+if (showDetails && widget.allowTransportModes)
+  Column(
+    children: [
+      const SizedBox(height: 12),
+
+      SizedBox(
+        height: 140,
+        child: SingleChildScrollView(
+          child: Column(
+            children: widget.recommendation.segments.map((segment) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Icon(
+                      _iconForMode(segment.mode),
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
                       child: Text(
-                        "Hide Details",
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        "${segment.mode}: ${segment.from} → ${segment.to}",
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    Text(
+                      "${segment.startTime.format(context)} - ${segment.endTime.format(context)}",
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+      const SizedBox(height: 8),
+      TextButton(
+        onPressed: _toggleDetails,
+        style: const ButtonStyle(
+          overlayColor: WidgetStatePropertyAll(Colors.transparent),
+          padding: WidgetStatePropertyAll(
+            EdgeInsets.symmetric(vertical: 6),
+          ),
+        ),
+        child: const Text(
+          "Hide Details",
+          style: TextStyle(
+            color: Colors.blue,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        ),
+    ],
+  ),      
           ],
         ),
       ),
     );
   }
-}
+}        

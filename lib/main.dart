@@ -32,8 +32,6 @@ class MyApp extends StatelessWidget {
       overlapPercent: 0.27,
       meetPoint: "Andheri Station",
       splitPoint: "DJSCE",
-      journeyMode: JourneyMode.private,
-      isFriend: false,
       etaAtMeetPoint: const TimeOfDay(hour: 8, minute: 10),
       segments: [
         // RouteSegment(
@@ -55,8 +53,6 @@ class MyApp extends StatelessWidget {
       meetPoint: "Vikhroli Station",
       splitPoint: "DJSCE",
       etaAtMeetPoint: const TimeOfDay(hour: 7, minute: 15),
-      journeyMode: JourneyMode.public,
-      isFriend: false,
       segments: [
         RouteSegment(
           mode: "Train",
@@ -91,8 +87,6 @@ class MyApp extends StatelessWidget {
       splitPoint: "DJSCE",
       etaAtMeetPoint: const TimeOfDay(hour: 7, minute: 15),
       phoneNumber: "+91 9998884456",
-      journeyMode: JourneyMode.public,
-      isFriend: true,
       segments: [
         RouteSegment(
           mode: "Train",
