@@ -42,7 +42,12 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
       if (_focusNode.hasFocus && widget.controller.text.isNotEmpty) {
         _insertOverlay();
       } else {
-        _removeOverlay();
+        // Delay removal to let onTap register
+        Future.delayed(Duration(milliseconds: 100), () {
+          if (!_focusNode.hasFocus) {
+            _removeOverlay();
+          }
+        });
       }
     });
   }
@@ -58,7 +63,7 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
 
   void _onChange() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {
+    _debounce = Timer(const Duration(milliseconds: 500), () {
       if (widget.controller.text.isNotEmpty) {
         placeSuggestion(widget.controller.text);
         _insertOverlay();
@@ -71,7 +76,12 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
   void _insertOverlay() {
     _overlayEntry?.remove(); // remove old one if any
     _overlayEntry = _createOverlayEntry();
-    Overlay.of(context, rootOverlay: true).insert(_overlayEntry!);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final overlay = Overlay.of(context);
+      if (_overlayEntry != null) {
+        overlay.insert(_overlayEntry!);
+      }
+    });
   }
 
   void _removeOverlay() {
@@ -112,7 +122,29 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
                         itemCount: min(listOfLocation.length, 3),
                         itemBuilder: (context, index) {
                           final desc = listOfLocation[index]["description"];
-                          return _overlayListTile(desc, index, context);
+                          return ListTile(
+                            title: Text(desc),
+                            onTap: () {
+                              print("Tapped");
+                              final selectedPlace = listOfLocation[index];
+                              final desc = selectedPlace["description"];
+                              final placeId = selectedPlace["place_id"];
+
+                              widget.onLocationSelected(placeId);
+
+                              widget.controller.removeListener(_onChange);
+
+                              setState(() {
+                                widget.controller.text = desc;
+                                listOfLocation.clear();
+                              });
+
+                              _removeOverlay();
+                              _focusNode.unfocus();
+
+                              widget.controller.addListener(_onChange);
+                            },
+                          );
                         },
                       ),
           ),
@@ -121,67 +153,7 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
     );
   }
 
-  ListTile _overlayListTile(desc, int index, BuildContext context) {
-    return ListTile(
-      title: Text(desc),
-      onTap: () async {
-        final selectedPlace = listOfLocation[index];
-        final desc = selectedPlace["description"];
-        final placeId = selectedPlace["place_id"];
-
-        const apiKey = "AIzaSyA0NvuvBY0Zjd65JVi-znE2REVcT3ZJoO4";
-        final detailsUrl =
-            "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$apiKey";
-
-        final response = await http.get(Uri.parse(detailsUrl));
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          print(data);
-          final result = data["result"];
-
-          if (result == null ||
-              result["geometry"] == null ||
-              result["geometry"]["location"] == null) {
-            print("Invalid place details: $data");
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text(
-                      "Couldn't fetch location details. Please try another address.")),
-            );
-            return;
-          }
-
-          final location = result["geometry"]["location"];
-
-          final lat = location["lat"];
-          final lng = location["lng"];
-
-          widget.onLocationSelected({
-            "lat": lat,
-            "lng": lng,
-            "description": desc,
-          });
-
-          widget.controller.removeListener(_onChange);
-
-          setState(() {
-            widget.controller.text = desc;
-            listOfLocation.clear();
-          });
-
-          _removeOverlay();
-          _focusNode.unfocus();
-
-          widget.controller.addListener(_onChange);
-        } else {
-          print("Failed to fetch place details");
-        }
-      },
-    );
-  }
-
   void placeSuggestion(String input) async {
-    const String apiKey = "AIzaSyA0NvuvBY0Zjd65JVi-znE2REVcT3ZJoO4";
     if (input.isEmpty) {
       setState(() {
         listOfLocation.clear();
@@ -195,15 +167,13 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
         isLoading = true;
       });
 
-      String baseUrl =
-          "https://maps.googleapis.com/maps/api/place/autocomplete/json";
-      String request =
-          '$baseUrl?input=$input&key=$apiKey&sessiontoken=$sessionToken';
+      String baseUrl = "https://travelr-ml.onrender.com/autocomplete";
+      String request = '$baseUrl?input=$input';
 
       var response = await http.get(Uri.parse(request));
       if (response.statusCode == 200) {
         setState(() {
-          listOfLocation = json.decode(response.body)['predictions'];
+          listOfLocation = json.decode(response.body)['suggestions'];
         });
       } else {
         throw Exception("Failed to load suggestions");
