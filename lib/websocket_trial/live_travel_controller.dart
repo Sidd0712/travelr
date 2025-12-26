@@ -14,15 +14,17 @@ class LiveTravelController {
   StreamSubscription<Position>? _locationSub;
 
   void start(String roomId, String userId) async {
+    debugPrint("🟢 WebSocketService.connect() CALLED");
     _ws.connect(roomId, userId);
 
     _ws.stream.listen((msg) {
       final data = msg is String ? msg : msg.toString();
       final parsed = jsonDecode(data);
+      print(parsed);
+      debugPrint("📥 RECEIVED WS: $msg");
 
       if (parsed["status"] == "CONNECTED" && parsed["user_id"] != userId) {
-        otherUserLocation.value =
-            "${parsed["payload"]["lat"]}, ${parsed["payload"]["lng"]}";
+        otherUserLocation.value = "${parsed["location"]}";
       }
     });
 

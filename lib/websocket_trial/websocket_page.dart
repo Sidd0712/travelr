@@ -26,7 +26,7 @@ class _WebsocketTrialPageState extends State<WebsocketTrialPage> {
   void _connect() {
     final userId = userIdController.text.trim();
     if (userId.isEmpty) return;
-
+    debugPrint("Connecting...");
     controller.start("1", userId);
     setState(() => connected = true);
   }
