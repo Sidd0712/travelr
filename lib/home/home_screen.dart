@@ -119,6 +119,8 @@ class _HomeScreenState extends State<HomeScreen> {
         } else {
           final groups = snapshot.data!.docs;
 
+          //Random Insane Big-Brain Calcs Here
+
           return ListView.builder(
             padding: const EdgeInsets.all(16.0),
             itemCount: groups.length,
