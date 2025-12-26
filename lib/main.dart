@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:travelr/live_travel/live_travel_model.dart';
+import 'package:travelr/live_travel/live_travel_pane.dart';
 import 'package:travelr/login/splash.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:travelr/recommender/recommendation_model.dart';
 import 'package:travelr/recommender/recommender_carousel.dart';
 import 'login/firebase_options.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -16,102 +17,13 @@ void main() async {
     persistenceEnabled: true,
   );
 
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key});
   // This widget is the root of your application.
-
-  static final List<Recommendation> mockRecommendations = [
-    Recommendation(
-      name: "Zeel Bhadra",
-      gender: "Female",
-      age: 20,
-      overlapDist: 2.0,
-      overlapPercent: 0.27,
-      meetPoint: "Andheri Station",
-      splitPoint: "DJSCE",
-      etaAtMeetPoint: const TimeOfDay(hour: 8, minute: 10),
-      segments: [
-        // RouteSegment(
-        //   mode: "Auto",
-        //   from: "Andheri Station",
-        //   to: "DJSCE",
-        //   startTime: const TimeOfDay(hour: 07, minute: 45),
-        //   endTime: const TimeOfDay(hour: 08, minute: 00),
-        // ),
-      ],
-    ),
-
-    Recommendation(
-      name: "Yash Ghogale",
-      gender: "Male",
-      age: 21,
-      overlapDist: 12.1,
-      overlapPercent: 0.56,
-      meetPoint: "Vikhroli Station",
-      splitPoint: "DJSCE",
-      etaAtMeetPoint: const TimeOfDay(hour: 7, minute: 15),
-      segments: [
-        RouteSegment(
-          mode: "Train",
-          from: "Vikhroli Train Station",
-          to: "Ghatkopar",
-          startTime: const TimeOfDay(hour: 07, minute: 05),
-          endTime: const TimeOfDay(hour: 07, minute: 15),
-        ),
-        RouteSegment(
-          mode: "Metro",
-          from: "Ghatkopar",
-          to: "Andheri Station",
-          startTime: const TimeOfDay(hour: 07, minute: 20),
-          endTime: const TimeOfDay(hour: 07, minute: 40),
-        ),
-        RouteSegment(
-          mode: "Auto",
-          from: "Andheri Station",
-          to: "DJSCE",
-          startTime: const TimeOfDay(hour: 07, minute: 45),
-          endTime: const TimeOfDay(hour: 08, minute: 00),
-        ),
-      ],
-    ),
-    Recommendation(
-      name: "Rhea Sanghvi",
-      gender: "Female",
-      age: 20,
-      overlapDist: 17.6,
-      overlapPercent: 0.83,
-      meetPoint: "Mulund Station",
-      splitPoint: "DJSCE",
-      etaAtMeetPoint: const TimeOfDay(hour: 7, minute: 15),
-      phoneNumber: "+91 9998884456",
-      segments: [
-        RouteSegment(
-          mode: "Train",
-          from: "Mulund Station",
-          to: "Ghatkopar",
-          startTime: const TimeOfDay(hour: 06, minute: 55),
-          endTime: const TimeOfDay(hour: 07, minute: 15),
-        ),
-        RouteSegment(
-          mode: "Metro",
-          from: "Ghatkopar",
-          to: "Andheri Station",
-          startTime: const TimeOfDay(hour: 07, minute: 20),
-          endTime: const TimeOfDay(hour: 07, minute: 40),
-        ),
-        RouteSegment(
-          mode: "Auto",
-          from: "Andheri Station",
-          to: "DJSCE",
-          startTime: const TimeOfDay(hour: 07, minute: 45),
-          endTime: const TimeOfDay(hour: 08, minute: 00),
-        ),
-      ],
-    ),
-  ];
+  LiveTravelSession lts = LiveTravelSession.mock();
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +49,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: RecommenderCarousel(recommendations: mockRecommendations),
+      home: LiveTravelPane(session: lts, currentUserId: 'me'),
     );
   }
 }
