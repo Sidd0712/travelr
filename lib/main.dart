@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:travelr/login/splash.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:travelr/websocket_trial/websocket_page.dart';
 import 'login/firebase_options.dart';
 
 void main() async {
@@ -44,7 +45,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: const SplashScreenPage(title: "travelr"),
+      home: const WebsocketTrialPage(),
     );
   }
 }
