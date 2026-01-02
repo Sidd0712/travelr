@@ -47,6 +47,7 @@ class TravelParticipant {
   final TravelStatus status;
   // Remaining route for THIS user only
   final List<RouteStop> remainingRoute;
+  final TimeOfDay? updatedAt;
 
   const TravelParticipant({
     required this.userId,
@@ -57,6 +58,8 @@ class TravelParticipant {
     required this.progressPercent,
     required this.status,
     required this.remainingRoute,
+    this.updatedAt,
+
   });
 
   // Remaining duration to meet point (derived from TimeOfDay)
@@ -92,6 +95,7 @@ class TravelParticipant {
       progressPercent: progressPercent ?? this.progressPercent,
       status: status ?? this.status,
       remainingRoute: remainingRoute ?? this.remainingRoute,
+      updatedAt: updatedAt ?? updatedAt,
     );
   }
 
@@ -180,6 +184,7 @@ class LiveTravelSession {
           etaAtMeetPoint: const TimeOfDay(hour: 7, minute: 15),
           progressPercent: 1.0,
           status: TravelStatus.arrived,
+
           remainingRoute: [
             RouteStop.mock(
               place: 'Silver Bell Society',
