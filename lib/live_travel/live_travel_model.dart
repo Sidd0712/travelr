@@ -11,15 +11,11 @@ enum TravelStatus {
 class RouteStop {
   final String placeName;
   final TimeOfDay eta;
-  final int sequenceIndex; //data will already be in order so no need of this
-  final bool isMeetPoint;
   final String? mode;
 
   const RouteStop({
     required this.placeName,
     required this.eta,
-    required this.sequenceIndex,
-    this.isMeetPoint = false,  //instead put list of user ids of profiles meeting here
     this.mode,
   });
 
@@ -34,8 +30,6 @@ class RouteStop {
     return RouteStop(
       placeName: place,
       eta: TimeOfDay(hour: hour, minute: minute),
-      sequenceIndex: index,
-      isMeetPoint: meet,
       mode: mode,
     );
   }
@@ -68,8 +62,7 @@ class TravelParticipant {
   // Remaining duration to meet point (derived from TimeOfDay)
   Duration get remainingDuration {
     final now = TimeOfDay.now();
-    final etaMinutes =
-        etaAtMeetPoint.hour * 60 + etaAtMeetPoint.minute;
+    final etaMinutes = etaAtMeetPoint.hour * 60 + etaAtMeetPoint.minute;
     final nowMinutes = now.hour * 60 + now.minute;
     final diff = etaMinutes - nowMinutes;
     return Duration(minutes: diff < 0 ? 0 : diff);
@@ -111,8 +104,7 @@ class TravelParticipant {
     List<RouteStop>? route,
   }) {
     final now = TimeOfDay.now();
-    final etaMinutes =
-        etaAtMeetPoint.hour * 60 + etaAtMeetPoint.minute;
+    final etaMinutes = etaAtMeetPoint.hour * 60 + etaAtMeetPoint.minute;
     final nowMinutes = now.hour * 60 + now.minute;
 
     return TravelParticipant(
@@ -210,13 +202,13 @@ class LiveTravelSession {
             ),
             RouteStop.mock(
               place: 'Andheri Station',
-              hour: 18,
+              hour: 19,
               minute: 45,
               index: 3,
             ),
             RouteStop.mock(
               place: 'DJSCE',
-              hour: 7,
+              hour: 23,
               minute: 55,
               index: 4,
             ),
@@ -224,5 +216,11 @@ class LiveTravelSession {
         ),
       ],
     );
+  }
+
+  LiveTravelSession? copyWith(
+      {required List<TravelParticipant> participants,
+      required DateTime updatedAt}) {
+    return LiveTravelSession.mock();
   }
 }

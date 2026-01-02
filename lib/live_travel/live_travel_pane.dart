@@ -16,168 +16,92 @@ class LiveTravelPane extends StatefulWidget {
 }
 
 class _LiveTravelPaneState extends State<LiveTravelPane>
-  with TickerProviderStateMixin {
+    with TickerProviderStateMixin {
   bool expanded = false;
 
-  @override
-  Widget build(BuildContext context) {
-    final me = widget.session.participantFor(widget.currentUserId);
-
-    return GestureDetector(
-      onTap: () {
-        if (me != null && me.remainingRoute.isNotEmpty) {
-          setState(() => expanded = !expanded);
-        }
-      },
-      child: SizedBox(
-        height: 100,
-        child: Card(
-          color: Colors.white,
-          elevation: 1.5,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _Header(session: widget.session),
-              const SizedBox(height: 12),
-
-              _EtaList(session: widget.session),
-
-              AnimatedSize(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                child: expanded && me != null
-                    ? SizedBox(height: 160,
-                      child: RemainingRouteTimeline(
-                      route: me.remainingRoute,
-                      scrollable: true,
-                      ),
-                  )
-                    : const SizedBox.shrink(),
-              ),
-
-              const SizedBox(height: 12),
-
-              _TravellingWithRow(
-                userIds: widget.session.currentlyTravellingWith,
-              ),
-            ],
-          ),
-        ),
-      ),
-        ),
-      );
-  }
-}
-
-// Header
-class _Header extends StatelessWidget {
-  final LiveTravelSession session;
-
-  const _Header({required this.session});
-
-  @override
-  Widget build(BuildContext context) {
+  Row header() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          session.groupName,
+          widget.session.groupName,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         ),
         Text(
-          'Meet at ${session.meetPoint}',
-          style: TextStyle(fontSize: 14, color: Colors.black, fontWeight: FontWeight.w400),
+          'Meet at ${widget.session.meetPoint}',
+          style: TextStyle(
+              fontSize: 14, color: Colors.black, fontWeight: FontWeight.w400),
         ),
       ],
     );
   }
-}
 
-// ETA List (scrolls if >5 users)
-class _EtaList extends StatelessWidget {
-  final LiveTravelSession session;
-
-  const _EtaList({required this.session});
-
-  @override
-  Widget build(BuildContext context) {
-    final limitHeight = session.participants.length > 5;
+  // ETA List (scrolls if >5 users)
+  ConstrainedBox ETA_List() {
+    final limitHeight = widget.session.participants.length > 5;
 
     return ConstrainedBox(
-      constraints:
-          BoxConstraints(maxHeight: limitHeight ? 220 : double.infinity),
+      constraints: limitHeight
+          ? const BoxConstraints(maxHeight: 220)
+          : const BoxConstraints(),
       child: ListView.separated(
         shrinkWrap: true,
         physics: limitHeight
             ? const BouncingScrollPhysics()
             : const NeverScrollableScrollPhysics(),
-        itemCount: session.participants.length,
+        itemCount: widget.session.participants.length,
         separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemBuilder: (_, index) {
-          return EtaRow(participant: session.participants[index]);
+          return ETA_Row(widget.session.participants[index]);
         },
       ),
     );
   }
-}
 
-// ETA Row
-
-class EtaRow extends StatelessWidget {
-  final TravelParticipant participant;
-
-  const EtaRow({
-    super.key,
-    required this.participant,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Row ETA_Row(TravelParticipant participant) {
     return Row(
       children: [
-        CircleAvatar(
-          radius: 20,
-          backgroundColor: Colors.grey.shade300,
-          child: Text(
-            participant.name.characters.first.toUpperCase(),
-            style: const TextStyle(fontWeight: FontWeight.bold),
+        if (participant.userId != widget.currentUserId) ...[
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: Colors.grey.shade300,
+            child: Text(
+              participant.name.characters.first.toUpperCase(),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
+          const SizedBox(width: 12)
+        ],
         Expanded(
           child: Stack(
             alignment: Alignment.center,
             children: [
               LinearProgressIndicator(
-                value: participant.progressPercent.clamp(0.0, 1.0), 
+                value: participant.progressPercent.clamp(0.0, 1.0),
                 minHeight: 24, // pill height
-                backgroundColor: (participant.hasArrived
-                  ? Colors.green
-                  : Colors.blue).withValues(alpha : 0.2),
+                backgroundColor:
+                    (participant.hasArrived ? Colors.green : Colors.blue)
+                        .withValues(alpha: 0.2),
                 valueColor: AlwaysStoppedAnimation<Color>(
-              participant.hasArrived ? Colors.green : Colors.blue,
-              ),
-              borderRadius: BorderRadius.circular(14),
+                  participant.hasArrived ? Colors.green : Colors.blue,
+                ),
+                borderRadius: BorderRadius.circular(14),
               ),
 
-      // ETA text on top of the pill
-          Text(
-            participant.etaLabel,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
+              // ETA text on top of the pill
+              Text(
+                participant.etaLabel,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ),
-    const SizedBox(width: 8),
-
+        ),
+        if (participant.userId != widget.currentUserId) ...[
+          const SizedBox(width: 8),
           Text(
             participant.currentLocation,
             style: const TextStyle(
@@ -185,37 +109,21 @@ class EtaRow extends StatelessWidget {
               color: Colors.black,
             ),
           ),
-        ],
+        ]
+      ],
     );
-  } // Widget build
-}
-
-// Remaining Route - scrollable timeline.
-class RemainingRouteTimeline extends StatelessWidget {
-  final List<RouteStop> route;
-  final bool scrollable;
-
-  const RemainingRouteTimeline({
-    super.key,
-    required this.route,
-    this.scrollable = false,
-     });
-
-  bool _isVisited(TimeOfDay eta) {
-    final now = TimeOfDay.now();
-    return (eta.hour * 60 + eta.minute) <=
-        (now.hour * 60 + now.minute);
   }
 
-  @override
-  Widget build(BuildContext context) {
+  // Remaining Route - scrollable timeline.
+  Padding RemainingRouteTimeline(
+      BuildContext context, List<RouteStop> route, bool scrollable) {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: ListView.builder(
         shrinkWrap: true,
         physics: scrollable
-          ? const BouncingScrollPhysics()
-          : const NeverScrollableScrollPhysics(),
+            ? const BouncingScrollPhysics()
+            : const NeverScrollableScrollPhysics(),
         itemCount: route.length,
         itemBuilder: (_, index) {
           final stop = route[index];
@@ -227,17 +135,9 @@ class RemainingRouteTimeline extends StatelessWidget {
               Column(
                 children: [
                   Icon(
-                    stop.isMeetPoint
-                    ? Icons.location_on
-                    : visited
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
+                    visited ? Icons.check_circle : Icons.radio_button_unchecked,
                     size: 16,
-                    color: stop.isMeetPoint
-                    ? Colors.blue
-                    : visited
-                      ? Colors.green
-                        : Colors.grey,
+                    color: visited ? Colors.green : Colors.grey,
                   ),
                   if (index != route.length - 1)
                     Container(
@@ -272,19 +172,13 @@ class RemainingRouteTimeline extends StatelessWidget {
       ),
     );
   }
-}
 
-// Travelling_With Row
+  bool _isVisited(TimeOfDay eta) {
+    final now = TimeOfDay.now();
+    return (eta.hour * 60 + eta.minute) <= (now.hour * 60 + now.minute);
+  }
 
-class _TravellingWithRow extends StatelessWidget {
-  final List<String> userIds;
-
-  const _TravellingWithRow({
-    required this.userIds,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Row TravellingWithRow(List<String> userIds) {
     return Row(
       children: [
         const Text('Travelling with:', style: TextStyle(fontSize: 12)),
@@ -296,13 +190,87 @@ class _TravellingWithRow extends StatelessWidget {
               radius: 22,
               backgroundColor: Colors.grey.shade300,
               child: Text(
-                id.characters.first.toUpperCase(),
-                style: const TextStyle(fontSize: 10),
+                widget.session
+                        .participantFor(id)
+                        ?.name
+                        .characters
+                        .first
+                        .toUpperCase() ??
+                    "X",
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final me = widget.session.participantFor(widget.currentUserId);
+
+    return GestureDetector(
+      onTap: () {
+        if (me != null && me.remainingRoute.isNotEmpty) {
+          setState(() => expanded = !expanded);
+        }
+      },
+      child: Card(
+        color: Colors.white,
+        elevation: 1.5,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              header(),
+              const SizedBox(height: 12),
+              ETA_List(),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                alignment: Alignment.topCenter,
+                child: expanded && me != null
+                    ? Column(
+                        children: [
+                          const SizedBox(height: 10),
+                          Divider(height: 2),
+                          SizedBox(
+                            height: 160,
+                            width: double.infinity,
+                            child: RemainingRouteTimeline(
+                              context,
+                              me.remainingRoute,
+                              true,
+                            ),
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 10),
+              Divider(height: 2),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  TravellingWithRow(
+                    widget.session.currentlyTravellingWith,
+                  ),
+                  Expanded(
+                    child: Text(
+                      widget.session.updatedAt.toString(),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

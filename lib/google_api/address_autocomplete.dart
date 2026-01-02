@@ -129,6 +129,8 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
                               final desc = selectedPlace["description"];
                               final placeId = selectedPlace["place_id"];
 
+                              //Place Id is converted to lat lon
+
                               widget.onLocationSelected(placeId);
 
                               widget.controller.removeListener(_onChange);

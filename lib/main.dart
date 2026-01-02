@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:travelr/recommender/recommendation_model.dart';
 import 'package:travelr/recommender/recommender_carousel.dart';
 import 'login/firebase_options.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -49,7 +50,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: LiveTravelPane(session: lts, currentUserId: 'me'),
+      home: SplashScreenPage(title: "travelr"),
     );
   }
 }
