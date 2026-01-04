@@ -129,21 +129,22 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
                               final desc = selectedPlace["description"];
                               final placeId = selectedPlace["place_id"];
 
-                              //Place Id is converted to lat lon
+                              getGeopoint(placeId).then((data) {
+                                print(data);
+                                widget.onLocationSelected(data);
 
-                              widget.onLocationSelected(placeId);
+                                widget.controller.removeListener(_onChange);
 
-                              widget.controller.removeListener(_onChange);
+                                setState(() {
+                                  widget.controller.text = desc;
+                                  listOfLocation.clear();
+                                });
 
-                              setState(() {
-                                widget.controller.text = desc;
-                                listOfLocation.clear();
+                                _removeOverlay();
+                                _focusNode.unfocus();
+
+                                widget.controller.addListener(_onChange);
                               });
-
-                              _removeOverlay();
-                              _focusNode.unfocus();
-
-                              widget.controller.addListener(_onChange);
                             },
                           );
                         },
@@ -152,6 +153,17 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
         ),
       ),
     );
+  }
+
+  Future<dynamic> getGeopoint(placeId) async {
+    final uri = Uri.https(
+      'travelr-ml.onrender.com',
+      '/geopoint-from-place',
+      {'place_id': placeId},
+    );
+    var response = await http.get(uri);
+    var data = json.decode(response.body);
+    return data;
   }
 
   void placeSuggestion(String input) async {

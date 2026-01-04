@@ -29,14 +29,14 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   String? _selectedGender;
   String? _selectedGenderPreference;
 
-  GeoPoint startingGeoPoint = GeoPoint(0, 0); //Nullable hai ye
-  GeoPoint endingGeoPoint = GeoPoint(0, 0); //Nullable hai ye
+  GeoPoint? startingGeoPoint;
+  GeoPoint? endingGeoPoint;
 
   Future<void> _signUp() async {
     if (_nameController.text.isEmpty ||
         _phoneController.text.length != 10 ||
-        //startingGeoPoint == null ||
-        //endingGeoPoint == null ||
+        startingGeoPoint == null ||
+        endingGeoPoint == null ||
         _selectedGender == null ||
         _selectedGenderPreference == null) {
       ScaffoldMessenger.of(context).showSnackBar(
