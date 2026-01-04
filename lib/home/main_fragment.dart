@@ -12,6 +12,7 @@ import 'package:travelr/live_travel/live_travel_model.dart';
 import 'package:travelr/live_travel/live_travel_pane.dart';
 import 'package:travelr/login/login.dart';
 import 'package:travelr/home/profile_page.dart';
+import 'package:travelr/profile/update_profile.dart';
 import 'package:travelr/requests/friends_page.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -31,11 +32,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     fetchUserProfile();
-    _controller.start(
-      roomId: "1",
-      userId: "me",
-      initialSession: LiveTravelSession.mock(),
-    );
+    // _controller.start(
+    //   roomId: "1",
+    //   userId: "me",
+    //   initialSession: LiveTravelSession.mock(),
+    // );
   }
 
   void fetchUserProfile() async {
@@ -71,6 +72,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontFamily: "Northlane", fontSize: 38, color: Colors.black)),
         centerTitle: true,
         leading: SizedBox(),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_rounded, color: Colors.black),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UpdateProfileScreen(
+                    user: user!,
+                  ),
+                ),
+              );
+              
+            },
+          ),
+        ],
       ),
       floatingActionButton: _selectedIndex == 1
           ? FloatingActionButton(

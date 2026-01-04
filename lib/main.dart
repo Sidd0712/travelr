@@ -7,6 +7,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:travelr/recommender/recommendation_model.dart';
 import 'package:travelr/recommender/recommender_carousel.dart';
 import 'login/firebase_options.dart';
+import 'package:travelr/profile/update_profile.dart';
+import 'database/profile_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
