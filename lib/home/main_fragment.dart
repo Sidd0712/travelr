@@ -1,16 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:travelr/chat/chat_page.dart';
 import 'package:travelr/chat/create_chat.dart';
 import 'package:travelr/database/profile_model.dart';
 import 'package:travelr/database/profile_service.dart';
 import 'package:travelr/home/chat_screen.dart';
 import 'package:travelr/live_travel/live_travel_controller.dart';
-import 'package:travelr/live_travel/live_travel_model.dart';
 import 'package:travelr/live_travel/live_travel_pane.dart';
-import 'package:travelr/login/login.dart';
 import 'package:travelr/home/profile_page.dart';
 import 'package:travelr/profile/update_profile.dart';
 import 'package:travelr/requests/friends_page.dart';
@@ -32,11 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     fetchUserProfile();
-    // _controller.start(
-    //   roomId: "1",
-    //   userId: "me",
-    //   initialSession: LiveTravelSession.mock(),
-    // );
   }
 
   void fetchUserProfile() async {
@@ -84,7 +75,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               );
-              
             },
           ),
         ],
@@ -132,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 return LiveTravelPane(
                   session: session,
-                  currentUserId: "me",
+                  currentUserId: uid,
                 );
               }),
         ],

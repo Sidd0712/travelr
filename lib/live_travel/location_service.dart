@@ -5,12 +5,16 @@ class LocationService {
   static Future<void> _ensurePermission() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      throw Exception("Location services are disabled");
+      await Geolocator.openLocationSettings();
+
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception("Location services are disabled");
+      }
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
-      print("Requesting Permission");
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         throw Exception("Location permission denied");

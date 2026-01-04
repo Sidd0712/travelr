@@ -259,12 +259,12 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
                   TravellingWithRow(
                     widget.session.currentlyTravellingWith,
                   ),
-                  Expanded(
-                    child: Text(
-                      widget.session.updatedAt.toString(),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+                  // Expanded(
+                  //   child: Text(
+                  //     widget.session.updatedAt.toString(),
+                  //     overflow: TextOverflow.ellipsis,
+                  //   ),
+                  // ),
                 ],
               ),
             ],

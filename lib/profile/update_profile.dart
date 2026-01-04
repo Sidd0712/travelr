@@ -26,8 +26,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   String? _selectedGender;
   String? _selectedGenderPreference;
 
-  late GeoPoint startingGeoPoint;  //yeh firestore mei store hoga
-  late GeoPoint endingGeoPoint;
+  GeoPoint? startingGeoPoint;
+  GeoPoint? endingGeoPoint;
 
   @override
   void initState() {
@@ -49,6 +49,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   void _updateProfile() {
     if (_nameController.text.isEmpty ||
         _phoneController.text.length != 10 ||
+        startingGeoPoint == null ||
+        endingGeoPoint == null ||
         _selectedGender == null ||
         _selectedGenderPreference == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -63,8 +65,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       gender: _selectedGender!,
       phoneNumber: int.parse(_phoneController.text.trim()),
       preference: _selectedGenderPreference!,
-      start: startingGeoPoint,
-      end: endingGeoPoint,
+      start: startingGeoPoint!,
+      end: endingGeoPoint!,
       friends: widget.user.friends,
       friendRequests: widget.user.friendRequests,
       friendRequested: widget.user.friendRequested,
@@ -72,6 +74,9 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
 
     ProfilesDatabase.updateProfile(updatedProfile);
 
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Edit Successful!")),
+    );
     Navigator.pop(context);
   }
 
@@ -101,31 +106,18 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-
               nameField(),
               const SizedBox(height: 10),
-
               phoneField(),
               const SizedBox(height: 10),
-
-              locationField(
-                _startingLocationController,
-                "Starting Location"
-              ),
+              locationField(_startingLocationController, "Starting Location"),
               const SizedBox(height: 10),
-
-              locationField(
-                _endingLocationController,
-                "Ending Location"
-              ),
+              locationField(_endingLocationController, "Ending Location"),
               const SizedBox(height: 10),
-
               genderField(),
               const SizedBox(height: 10),
-
               genderPreferenceField(),
               const SizedBox(height: 20),
-
               TextButton(
                 onPressed: _updateProfile,
                 style: TextButton.styleFrom(

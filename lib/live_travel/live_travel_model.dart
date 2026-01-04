@@ -59,7 +59,6 @@ class TravelParticipant {
     required this.status,
     required this.remainingRoute,
     this.updatedAt,
-
   });
 
   // Remaining duration to meet point (derived from TimeOfDay)
@@ -95,7 +94,7 @@ class TravelParticipant {
       progressPercent: progressPercent ?? this.progressPercent,
       status: status ?? this.status,
       remainingRoute: remainingRoute ?? this.remainingRoute,
-      updatedAt: updatedAt ?? updatedAt,
+      updatedAt: updatedAt,
     );
   }
 
@@ -178,13 +177,12 @@ class LiveTravelSession {
           progress: 0.65,
         ),
         TravelParticipant(
-          userId: 'me',
+          userId: 'O434RH17tsQVd6l3yqalo6oFaJp2',
           name: 'Siddhant Patel',
           currentLocation: 'Mulund Station',
           etaAtMeetPoint: const TimeOfDay(hour: 7, minute: 15),
           progressPercent: 1.0,
           status: TravelStatus.arrived,
-
           remainingRoute: [
             RouteStop.mock(
               place: 'Silver Bell Society',
@@ -223,9 +221,60 @@ class LiveTravelSession {
     );
   }
 
-  LiveTravelSession? copyWith(
-      {required List<TravelParticipant> participants,
-      required DateTime updatedAt}) {
-    return LiveTravelSession.mock();
+  static LiveTravelSession test(String sessionId, String groupName) {
+    return LiveTravelSession(
+      sessionId: sessionId,
+      groupName: groupName,
+      meetPoint: 'Andagundu',
+      updatedAt: DateTime.now(),
+      currentlyTravellingWith: [],
+      participants: [
+        TravelParticipant.mock(
+          id: 'EPIXbABPOVdivtv2FLf5v5RyOrY2',
+          name: 'Zeel Bhadra',
+          location: 'Rando Location',
+          etaAtMeetPoint: const TimeOfDay(hour: 0, minute: 0),
+          progress: 0.00,
+        ),
+        TravelParticipant.mock(
+          id: 'n1a0EoJ7iJPAP0RhMBDjE8LQh9C3',
+          name: 'Siddhant Patel',
+          location: 'Awesome Town',
+          etaAtMeetPoint: const TimeOfDay(hour: 0, minute: 0),
+          progress: 0.00,
+        ),
+      ],
+    );
+  }
+
+  LiveTravelSession updateWithUID({
+    required String userId,
+    required TimeOfDay newEtaAtMeetPoint,
+    DateTime? updatedAt,
+  }) {
+    final now = TimeOfDay.now();
+    final etaMinutes = newEtaAtMeetPoint.hour * 60 + newEtaAtMeetPoint.minute;
+    final nowMinutes = now.hour * 60 + now.minute;
+
+    final newStatus =
+        etaMinutes <= nowMinutes ? TravelStatus.arrived : TravelStatus.enRoute;
+
+    final updatedParticipants = participants.map((p) {
+      if (p.userId != userId) return p;
+
+      return p.copyWith(
+        etaAtMeetPoint: newEtaAtMeetPoint,
+        status: newStatus,
+      );
+    }).toList();
+
+    return LiveTravelSession(
+      sessionId: sessionId,
+      groupName: groupName,
+      meetPoint: meetPoint,
+      participants: updatedParticipants,
+      currentlyTravellingWith: currentlyTravellingWith,
+      updatedAt: updatedAt ?? DateTime.now(),
+    );
   }
 }

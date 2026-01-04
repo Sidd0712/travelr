@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:travelr/live_travel/location_service.dart';
 import 'package:travelr/live_travel/websocket_service.dart';
@@ -53,6 +54,7 @@ class LiveTravelService {
 
     _connectSocket(roomId, userId);
     _startLocationUpdates();
+    print("Service Started");
   }
 
   // Stopping Logic
@@ -62,6 +64,7 @@ class LiveTravelService {
     _locationSub?.cancel();
     _wsSub?.cancel();
     _ws.disconnect();
+    _session = null;
     sessionNotifier.value = null;
   }
 
@@ -99,6 +102,7 @@ class LiveTravelService {
   void _onSocketMessage(dynamic msg) {
     final parsed = jsonDecode(msg as String);
     final type = parsed["type"];
+    print(parsed);
 
     if (type == "connected") {
       _onSocketConnected();
@@ -109,14 +113,9 @@ class LiveTravelService {
       return;
     }
 
-    final locationUpdate = parsed["locationUpdate"];
-    if (locationUpdate == null || _session == null) return;
-
-    _applyParticipantLocation(
-      userId: locationUpdate["userId"],
-      lat: locationUpdate["lat"],
-      lon: locationUpdate["lon"],
-      updatedAt: parsed["updatedAt"],
+    _applyParticipantEta(
+      userId: parsed["user_id"],
+      eta: parsed["eta"] as int,
     );
   }
 
@@ -125,10 +124,12 @@ class LiveTravelService {
     _selfLocation = await LocationService.getCurrentLocation();
 
     _locationSub =
-        LocationService.getLocationStream(distanceFilter: 1).listen((pos) {
+        LocationService.getLocationStream(distanceFilter: 25).listen((pos) {
       _selfLocation = pos;
 
+      print("Sending Data...");
       _ws.send({
+        "user_id": _userId,
         "lat": pos.latitude,
         "lng": pos.longitude,
       });
@@ -136,28 +137,15 @@ class LiveTravelService {
   }
 
   // Session Updater
-  void _applyParticipantLocation({
-    required String userId,
-    required double lat,
-    required double lon,
-    required String updatedAt,
-  }) {
+  void _applyParticipantEta({required String userId, required int eta}) {
     if (_session == null) return;
     print("Some shit was updated");
 
-    final updatedParticipants = _session!.participants.map((p) {
-      if (p.userId != userId) return p;
-      return p.copyWith(
-        currentLocation:
-            "Lat ${lat.toStringAsFixed(4)}, Lon ${lon.toStringAsFixed(4)}",
-      );
-    }).toList();
-
-    _session = _session!.copyWith(
-      participants: updatedParticipants,
-      updatedAt: DateTime.parse(updatedAt),
-    );
-
+    final now = DateTime.now();
+    final etaAdded = now.add(Duration(seconds: eta));
+    TimeOfDay newEta = TimeOfDay(hour: etaAdded.hour, minute: etaAdded.minute);
+    _session =
+        _session!.updateWithUID(userId: userId, newEtaAtMeetPoint: newEta);
     sessionNotifier.value = _session;
     print("Update Successful");
   }
