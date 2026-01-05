@@ -39,7 +39,7 @@ class LocationService {
 
   /// Continuous location updates (for live travel)
   static Stream<Position> getLocationStream({
-    LocationAccuracy accuracy = LocationAccuracy.high,
+    LocationAccuracy accuracy = LocationAccuracy.bestForNavigation,
     int distanceFilter = 10,
   }) async* {
     await _ensurePermission();

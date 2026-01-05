@@ -126,7 +126,7 @@ class LiveTravelService {
     });
 
     _locationSub =
-        LocationService.getLocationStream(distanceFilter: 25).listen((pos) {
+        LocationService.getLocationStream(distanceFilter: 5).listen((pos) {
       _selfLocation = pos;
 
       print("Sending Data...");
