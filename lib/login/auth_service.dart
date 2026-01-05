@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:travelr/database/profile_model.dart';
 import 'package:travelr/database/profile_service.dart';
-import 'package:travelr/home/home_screen.dart';
+import 'package:travelr/home/main_fragment.dart';
 
 class AuthService {
   Future<void> signUp(

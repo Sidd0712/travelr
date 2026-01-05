@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:travelr/live_travel/live_travel_model.dart';
+import 'package:travelr/live_travel/live_travel_pane.dart';
 import 'package:travelr/login/splash.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:travelr/recommender/recommendation_model.dart';
+import 'package:travelr/recommender/recommender_carousel.dart';
 import 'login/firebase_options.dart';
+import 'package:travelr/profile/update_profile.dart';
+import 'database/profile_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,12 +20,14 @@ void main() async {
     persistenceEnabled: true,
   );
 
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key});
   // This widget is the root of your application.
+  LiveTravelSession lts = LiveTravelSession.mock();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -44,7 +52,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: const SplashScreenPage(title: "travelr"),
+      home: SplashScreenPage(title: "travelr"),
     );
   }
 }

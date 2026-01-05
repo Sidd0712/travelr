@@ -1,7 +1,13 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:travelr/database/chat_service.dart';
 import 'package:travelr/database/message_model.dart';
+import 'package:travelr/live_travel/live_travel_controller.dart';
+import 'package:travelr/live_travel/live_travel_model.dart';
+import 'package:travelr/live_travel/live_travel_pane.dart';
 
 class ChatPage extends StatefulWidget {
   final String roomID;
@@ -17,6 +23,7 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   String? _currentUserID;
   Map<String, String>? _members;
+  final LiveTravelController _controller = LiveTravelController();
 
   @override
   void initState() {
@@ -67,11 +74,69 @@ class _ChatPageState extends State<ChatPage> {
             onPressed: () => Navigator.pop(context),
           ),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(top: 10, left: 10),
+            child: IconButton(
+              icon: const Icon(Icons.route_outlined),
+              onPressed: () async {
+                if (_controller.session == null) {
+                  debugPrint("Calling API...");
+                  final uri = Uri.https(
+                    'travelr-ml.onrender.com',
+                    '/trip',
+                    {
+                      'user1_id': _currentUserID!,
+                      'user2_id': _members!.keys.first,
+                    },
+                  );
+
+                  try {
+                    final response = await http.get(uri);
+                    debugPrint("Recieved Output");
+
+                    if (response.statusCode != 200) {
+                      debugPrint("Trip API failed: ${response.statusCode}");
+                      return;
+                    }
+
+                    final data = json.decode(response.body);
+
+                    debugPrint("Starting Controller");
+                    _controller.start(
+                      roomId: widget.roomID,
+                      userId: _currentUserID!,
+                      initialSession: LiveTravelSession.test(
+                          widget.roomID, widget.groupName),
+                    );
+                    debugPrint("Controller Started");
+                  } catch (e) {
+                    debugPrint("Trip start failed: $e");
+                  }
+                } else {
+                  _controller.stop();
+                }
+              },
+            ),
+          ),
+          const SizedBox(width: 16),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15.0),
         child: Column(
           children: [
+            AnimatedBuilder(
+                animation: _controller,
+                builder: (_, __) {
+                  final session = _controller.session;
+                  if (session == null) return const SizedBox.shrink();
+
+                  return LiveTravelPane(
+                    session: session,
+                    currentUserId: _currentUserID!,
+                  );
+                }),
             Expanded(
               child: _buildMessagesList(),
             ),

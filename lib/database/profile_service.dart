@@ -61,6 +61,10 @@ class ProfilesDatabase {
   static Future<void> updateProfile(Profile user) async {
     try {
       await usersCollection.doc(user.uid).update(user.toJson());
+      final CollectionReference userFormCollection =
+          FirebaseFirestore.instance.collection('userForms');
+      Map<String, dynamic> convertedJson = convert(user);
+      await userFormCollection.doc(user.uid).update(convertedJson);
       print("Profile updated successfully!");
     } catch (e) {
       print("Error updating user: $e");
@@ -129,5 +133,20 @@ class ProfilesDatabase {
     } catch (e) {
       print("Error rejecting friend request: $e");
     }
+  }
+
+  static convert(Profile data) {
+    return {
+      "age": 20,
+      "arrivalTime": "08:00 AM",
+      "name": data.name,
+      "number": data.phoneNumber,
+      "gender": data.gender,
+      "genderPreference": data.preference,
+      "location1": data.start,
+      "location2": data.end,
+      "submittedAt": FieldValue.serverTimestamp(),
+      "transportType": "Private",
+    };
   }
 }

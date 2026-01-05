@@ -1,30 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:travelr/database/profile_service.dart';
 import 'package:travelr/google_api/address_autocomplete.dart';
-import 'package:travelr/login/auth_service.dart';
+import 'package:travelr/database/profile_model.dart';
 
-class CreateProfileScreen extends StatefulWidget {
-  const CreateProfileScreen({
+class UpdateProfileScreen extends StatefulWidget {
+  final Profile user;
+
+  const UpdateProfileScreen({
     super.key,
-    required this.email,
-    required this.password,
+    required this.user,
   });
 
-  final String email;
-  final String password;
-
   @override
-  _CreateProfileScreenState createState() => _CreateProfileScreenState();
+  State<UpdateProfileScreen> createState() => _UpdateProfileScreenState();
 }
 
-class _CreateProfileScreenState extends State<CreateProfileScreen> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _startingLocationController =
-      TextEditingController();
-  final TextEditingController _endingLocationController =
-      TextEditingController();
+class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
+  late TextEditingController _nameController;
+  late TextEditingController _phoneController;
+  late TextEditingController _startingLocationController;
+  late TextEditingController _endingLocationController;
 
   String? _selectedGender;
   String? _selectedGenderPreference;
@@ -32,7 +29,24 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   GeoPoint? startingGeoPoint;
   GeoPoint? endingGeoPoint;
 
-  Future<void> _signUp() async {
+  @override
+  void initState() {
+    super.initState();
+
+    _nameController = TextEditingController(text: widget.user.name);
+    _phoneController =
+        TextEditingController(text: widget.user.phoneNumber.toString());
+    _startingLocationController = TextEditingController();
+    _endingLocationController = TextEditingController();
+
+    _selectedGender = widget.user.gender;
+    _selectedGenderPreference = widget.user.preference;
+
+    startingGeoPoint = widget.user.start;
+    endingGeoPoint = widget.user.end;
+  }
+
+  void _updateProfile() {
     if (_nameController.text.isEmpty ||
         _phoneController.text.length != 10 ||
         startingGeoPoint == null ||
@@ -45,23 +59,25 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       return;
     }
 
-    await AuthService().signUp(
-      data: toMap(),
-      context: context,
+    final updatedProfile = Profile(
+      uid: widget.user.uid,
+      name: _nameController.text.trim(),
+      gender: _selectedGender!,
+      phoneNumber: int.parse(_phoneController.text.trim()),
+      preference: _selectedGenderPreference!,
+      start: startingGeoPoint!,
+      end: endingGeoPoint!,
+      friends: widget.user.friends,
+      friendRequests: widget.user.friendRequests,
+      friendRequested: widget.user.friendRequested,
     );
-  }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'name': _nameController.text,
-      'phone': _phoneController.text,
-      'startingLocation': startingGeoPoint,
-      'endingLocation': endingGeoPoint,
-      'gender': _selectedGender,
-      'genderPreference': _selectedGenderPreference,
-      'email': widget.email,
-      'password': widget.password,
-    };
+    ProfilesDatabase.updateProfile(updatedProfile);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Edit Successful!")),
+    );
+    Navigator.pop(context);
   }
 
   @override
@@ -72,44 +88,22 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
-          children: [
-            SizedBox(height: 20),
-            Text(
-              "travelr",
-              style: TextStyle(
-                fontFamily: "Northlane",
-                fontSize: 38,
-                color: Colors.black,
-              ),
-            ),
-          ],
-        ),
-        forceMaterialTransparency: true,
+        title: const Text("Update Profile"),
         centerTitle: true,
-        leading: Padding(
-          padding: const EdgeInsets.only(top: 10, left: 10),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            iconSize: 38,
-            onPressed: () => Navigator.pop(context),
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Padding(
-        padding:
-            const EdgeInsets.only(left: 30, right: 30, top: 15, bottom: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                "Create Profile",
-                style: TextStyle(
-                  fontSize: 30,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
+                "Update Profile",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               nameField(),
@@ -125,16 +119,16 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
               genderPreferenceField(),
               const SizedBox(height: 20),
               TextButton(
-                onPressed: _signUp,
+                onPressed: _updateProfile,
                 style: TextButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                   backgroundColor: Colors.blue,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
                 child: const Text(
-                  "Sign-Up",
+                  "Save Changes",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -146,62 +140,6 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget genderField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Select Gender",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        Column(
-          children: ["Male", "Female"].map((gender) {
-            return RadioListTile<String>(
-              title: Text(
-                gender,
-                style: TextStyle(fontSize: 16), // Keep text size consistent
-              ),
-              value: gender,
-              groupValue: _selectedGender,
-              activeColor: Colors.blue,
-              dense: true,
-              visualDensity: VisualDensity.compact,
-              onChanged: (value) {
-                setState(() => _selectedGender = value);
-              },
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget genderPreferenceField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Select Companion Gender Preference",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        Column(
-          children: ["Male", "Female", "Both"].map((gender) {
-            return RadioListTile<String>(
-              title: Text(
-                gender,
-                style: TextStyle(fontSize: 16),
-              ),
-              value: gender,
-              groupValue: _selectedGenderPreference,
-              activeColor: Colors.blue,
-              dense: true,
-              visualDensity: VisualDensity.compact,
-              onChanged: (value) {
-                setState(() => _selectedGenderPreference = value);
-              },
-            );
-          }).toList(),
-        ),
-      ],
     );
   }
 
@@ -219,6 +157,58 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
           }
         });
       },
+    );
+  }
+
+  Widget genderField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Select Gender",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        RadioGroup<String>(
+          groupValue: _selectedGender,
+          onChanged: (value) {
+            setState(() => _selectedGender = value);
+          },
+          child: Column(
+            children: ["Male", "Female"].map((gender) {
+              return RadioListTile<String>(
+                title: Text(gender),
+                value: gender,
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget genderPreferenceField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Companion Gender Preference",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        RadioGroup<String>(
+          groupValue: _selectedGenderPreference,
+          onChanged: (value) {
+            setState(() => _selectedGenderPreference = value);
+          },
+          child: Column(
+            children: ["Male", "Female", "Both"].map((gender) {
+              return RadioListTile<String>(
+                title: Text(gender),
+                value: gender,
+              );
+            }).toList(),
+          ),
+        ),
+      ],
     );
   }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:travelr/home/home_screen.dart';
+import 'package:travelr/home/main_fragment.dart';
 import 'package:travelr/on_boarding/slider_widget.dart';
 import 'package:travelr/on_boarding/slidermodel.dart';
 
