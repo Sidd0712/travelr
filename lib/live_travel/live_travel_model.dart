@@ -228,21 +228,21 @@ class LiveTravelSession {
     return LiveTravelSession(
       sessionId: sessionId,
       groupName: groupName,
-      meetPoint: 'Andagundu',
+      meetPoint: 'Godrej Gate 4',
       updatedAt: DateTime.now(),
       currentlyTravellingWith: [],
       participants: [
         TravelParticipant.mock(
           id: 'EPIXbABPOVdivtv2FLf5v5RyOrY2',
           name: 'Zeel Bhadra',
-          location: 'Rando Location',
+          location: 'D22 Godrej Colony',
           etaAtMeetPoint: const TimeOfDay(hour: 0, minute: 0),
           progress: 0.00,
         ),
         TravelParticipant.mock(
           id: 'n1a0EoJ7iJPAP0RhMBDjE8LQh9C3',
           name: 'Siddhant Patel',
-          location: 'Awesome Town',
+          location: 'Vikhroli Station',
           etaAtMeetPoint: const TimeOfDay(hour: 0, minute: 0),
           progress: 0.00,
         ),
