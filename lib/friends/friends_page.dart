@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:travelr/database/profile_model.dart';
 import 'package:travelr/database/profile_service.dart';
+import 'package:travelr/friends/friends_service.dart';
 
 class FriendsPage extends StatefulWidget {
   const FriendsPage({super.key});
@@ -146,8 +147,7 @@ class _FriendsPageState extends State<FriendsPage> {
             IconButton(
               icon: const Icon(Icons.close, color: Colors.red),
               onPressed: () async {
-                final currentUserID = FirebaseAuth.instance.currentUser!.uid;
-                await ProfilesDatabase.rejectFriendRequest(currentUserID, uid);
+                // TODO: Add remove logic here
                 setState(() {
                   friendRequests.remove(uid);
                 });
@@ -156,8 +156,7 @@ class _FriendsPageState extends State<FriendsPage> {
             IconButton(
               icon: const Icon(Icons.check, color: Colors.green),
               onPressed: () async {
-                final currentUserID = FirebaseAuth.instance.currentUser!.uid;
-                await ProfilesDatabase.acceptFriendRequest(currentUserID, uid);
+                await FriendsService.acceptFriendRequest(uid);
                 setState(() {
                   friendRequests.remove(uid);
                 });
@@ -170,26 +169,33 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   Future<void> _loadData(String currentUserID) async {
-    final String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
-    Profile? user = await ProfilesDatabase.getProfileFromUID(uid);
-    var allProfiles = await ProfilesDatabase.getProfilesPartial().first;
-    var friends = user!.friends;
+    final uid = FirebaseAuth.instance.currentUser!.uid;
 
+    // Get pending requests from backend
+    final pendingRequests = await FriendsService.getPendingRequests();
+
+    // Get friend list from backend
+    final friends = await FriendsService.listFriends();
+
+    // Load profiles for pending requests
     Map<String, String> requestsMap = {};
-    for (String requestUid in user.friendRequests) {
-      Profile? profile = await ProfilesDatabase.getProfileFromUID(requestUid);
+    for (final req in pendingRequests) {
+      final profile = await ProfilesDatabase.getProfileFromUID(req.fromUid);
       if (profile != null) {
-        requestsMap[requestUid] = profile.name;
+        requestsMap[req.fromUid] = profile.name;
       }
     }
 
     setState(() {
-      suggestions = Map.from(allProfiles)
-        ..removeWhere((key, value) =>
-            friends.contains(key) ||
-            key == uid ||
-            requestsMap.containsKey(key));
       friendRequests = requestsMap;
+
+      suggestions = Map.from(requestsMap)
+        ..removeWhere(
+          (key, _) =>
+              key == uid ||
+              friends.contains(key) ||
+              friendRequests.containsKey(key),
+        );
     });
 
     print("Suggestions: $suggestions");

@@ -61,7 +61,8 @@ class AuthService {
 
       navigator.pushReplacement(
         MaterialPageRoute(
-          builder: (BuildContext newContext) => const HomeScreen(),
+          builder: (BuildContext newContext) =>
+              const HomeScreen(parent: "Sign-Up"),
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -129,7 +130,8 @@ class AuthService {
 
       navigator.pushReplacement(
         MaterialPageRoute(
-          builder: (BuildContext newContext) => const HomeScreen(),
+          builder: (BuildContext newContext) =>
+              const HomeScreen(parent: "Sign-In"),
         ),
       );
     } on FirebaseAuthException catch (e) {

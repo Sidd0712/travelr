@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:travelr/database/chat_service.dart';
 import 'package:travelr/database/message_model.dart';
+import 'package:travelr/database/profile_service.dart';
 import 'package:travelr/live_travel/live_travel_controller.dart';
 import 'package:travelr/live_travel/live_travel_model.dart';
 import 'package:travelr/live_travel/live_travel_pane.dart';
@@ -24,6 +25,7 @@ class _ChatPageState extends State<ChatPage> {
   String? _currentUserID;
   Map<String, String>? _members;
   final LiveTravelController _controller = LiveTravelController();
+  String? _groupName;
 
   @override
   void initState() {
@@ -31,10 +33,50 @@ class _ChatPageState extends State<ChatPage> {
     _initializeChatData();
   }
 
+  String getOtherUserId({
+    required String roomId,
+    required String currentUserId,
+  }) {
+    // dm_uid1_uid2
+    final parts = roomId.split('_');
+
+    if (parts.length != 3) {
+      throw Exception("Invalid roomId format: $roomId");
+    }
+
+    final uid1 = parts[1];
+    final uid2 = parts[2];
+
+    return uid1 == currentUserId ? uid2 : uid1;
+  }
+
+  Future<String> getChatDisplayName({
+    required String roomId,
+    required String currentUserId,
+  }) async {
+    final otherUid = getOtherUserId(
+      roomId: roomId,
+      currentUserId: currentUserId,
+    );
+
+    final profile = await ProfilesDatabase.getProfilePartialFromUID(otherUid);
+    return profile[otherUid] ?? "Unknown User";
+  }
+
   Future<void> _initializeChatData() async {
     _currentUserID = FirebaseAuth.instance.currentUser?.uid ?? '';
     _members = await ChatService.getMemberProfiles(widget.roomID);
-    setState(() {});
+
+    final name = await getChatDisplayName(
+      roomId: widget.roomID,
+      currentUserId: _currentUserID!,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _groupName = name;
+    });
   }
 
   void sendMessage() async {
@@ -60,7 +102,7 @@ class _ChatPageState extends State<ChatPage> {
         title: Column(children: [
           const SizedBox(height: 20),
           Text(
-            widget.groupName,
+            _groupName ?? widget.groupName,
             style: const TextStyle(
                 fontSize: 25, color: Colors.black, fontWeight: FontWeight.w500),
           ),
