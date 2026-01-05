@@ -45,6 +45,7 @@ class TravelParticipant {
   final TimeOfDay etaAtMeetPoint;
   final double progressPercent; //progress bar
   final TravelStatus status;
+  final String? polyline;
   // Remaining route for THIS user only
   final List<RouteStop> remainingRoute;
   final TimeOfDay? updatedAt;
@@ -57,6 +58,7 @@ class TravelParticipant {
     required this.etaAtMeetPoint,
     required this.progressPercent,
     required this.status,
+    this.polyline,
     required this.remainingRoute,
     this.updatedAt,
   });
@@ -78,13 +80,13 @@ class TravelParticipant {
 
   bool get hasArrived => status == TravelStatus.arrived;
 
-  TravelParticipant copyWith({
-    String? currentLocation,
-    TimeOfDay? etaAtMeetPoint,
-    double? progressPercent,
-    TravelStatus? status,
-    List<RouteStop>? remainingRoute,
-  }) {
+  TravelParticipant copyWith(
+      {String? currentLocation,
+      TimeOfDay? etaAtMeetPoint,
+      double? progressPercent,
+      TravelStatus? status,
+      List<RouteStop>? remainingRoute,
+      String? polyline}) {
     return TravelParticipant(
       userId: userId,
       name: name,
@@ -93,6 +95,7 @@ class TravelParticipant {
       etaAtMeetPoint: etaAtMeetPoint ?? this.etaAtMeetPoint,
       progressPercent: progressPercent ?? this.progressPercent,
       status: status ?? this.status,
+      polyline: polyline,
       remainingRoute: remainingRoute ?? this.remainingRoute,
       updatedAt: updatedAt,
     );
@@ -247,11 +250,12 @@ class LiveTravelSession {
     );
   }
 
-  LiveTravelSession updateWithUID({
-    required String userId,
-    required TimeOfDay newEtaAtMeetPoint,
-    DateTime? updatedAt,
-  }) {
+  LiveTravelSession updateWithUID(
+      {required String userId,
+      required TimeOfDay newEtaAtMeetPoint,
+      required double newProgressPercent,
+      DateTime? updatedAt,
+      required String polyline}) {
     final now = TimeOfDay.now();
     final etaMinutes = newEtaAtMeetPoint.hour * 60 + newEtaAtMeetPoint.minute;
     final nowMinutes = now.hour * 60 + now.minute;
@@ -263,9 +267,10 @@ class LiveTravelSession {
       if (p.userId != userId) return p;
 
       return p.copyWith(
-        etaAtMeetPoint: newEtaAtMeetPoint,
-        status: newStatus,
-      );
+          etaAtMeetPoint: newEtaAtMeetPoint,
+          status: newStatus,
+          progressPercent: newProgressPercent,
+          polyline: polyline);
     }).toList();
 
     return LiveTravelSession(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'live_travel_model.dart';
 
 class LiveTravelPane extends StatefulWidget {
@@ -18,6 +20,7 @@ class LiveTravelPane extends StatefulWidget {
 class _LiveTravelPaneState extends State<LiveTravelPane>
     with TickerProviderStateMixin {
   bool expanded = false;
+  GoogleMapController? _mapController;
 
   Row header() {
     return Row(
@@ -30,7 +33,10 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
         Text(
           'Meet at ${widget.session.meetPoint}',
           style: TextStyle(
-              fontSize: 14, color: Colors.black, fontWeight: FontWeight.w400),
+            fontSize: 14,
+            color: Colors.black,
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ],
     );
@@ -70,7 +76,7 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          const SizedBox(width: 12)
+          const SizedBox(width: 12),
         ],
         Expanded(
           child: Stack(
@@ -104,19 +110,19 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
           const SizedBox(width: 8),
           Text(
             participant.currentLocation,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black,
-            ),
+            style: const TextStyle(fontSize: 12, color: Colors.black),
           ),
-        ]
+        ],
       ],
     );
   }
 
   // Remaining Route - scrollable timeline.
   Padding RemainingRouteTimeline(
-      BuildContext context, List<RouteStop> route, bool scrollable) {
+    BuildContext context,
+    List<RouteStop> route,
+    bool scrollable,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: ListView.builder(
@@ -178,7 +184,8 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
     return (eta.hour * 60 + eta.minute) <= (now.hour * 60 + now.minute);
   }
 
-  Row TravellingWithRow(List<String> userIds) {
+  Widget TravellingWithRow(List<String> userIds) {
+    if (userIds.isEmpty) return SizedBox();
     return Row(
       children: [
         const Text('Travelling with:', style: TextStyle(fontSize: 12)),
@@ -206,6 +213,11 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
     );
   }
 
+  List<LatLng> decodePolyline(String encoded) {
+    final decoded = PolylinePoints().decodePolyline(encoded);
+    return decoded.map((p) => LatLng(p.latitude, p.longitude)).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final me = widget.session.participantFor(widget.currentUserId);
@@ -227,6 +239,8 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               header(),
+              const SizedBox(height: 12),
+              MapPlot(),
               const SizedBox(height: 12),
               ETA_List(),
               AnimatedSize(
@@ -252,13 +266,13 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
                     : const SizedBox.shrink(),
               ),
               const SizedBox(height: 10),
-              Divider(height: 2),
-              const SizedBox(height: 10),
+              if (widget.session.currentlyTravellingWith.isEmpty) ...[
+                Divider(height: 2),
+                const SizedBox(height: 10),
+              ],
               Row(
                 children: [
-                  TravellingWithRow(
-                    widget.session.currentlyTravellingWith,
-                  ),
+                  TravellingWithRow(widget.session.currentlyTravellingWith),
                   // Expanded(
                   //   child: Text(
                   //     widget.session.updatedAt.toString(),
@@ -270,6 +284,67 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget MapPlot() {
+    final participants = widget.session.participants;
+
+    if (participants.isEmpty) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: Text("No routes available")),
+      );
+    }
+
+    final Map<PolylineId, Polyline> polylines = {};
+
+    for (final participant in participants) {
+      if (participant.polyline?.isEmpty ?? true) continue;
+
+      final points = decodePolyline(participant.polyline!);
+      if (points.isEmpty) continue;
+
+      polylines[PolylineId(participant.userId)] = Polyline(
+        polylineId: PolylineId(participant.userId),
+        points: points,
+        width: participant.userId == widget.currentUserId ? 6 : 4,
+        color: participant.userId == widget.currentUserId
+            ? Colors.blue
+            : Colors.yellow.shade700,
+      );
+    }
+
+    if (polylines.isEmpty) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: Text("No route data")),
+      );
+    }
+
+    final firstPolyline = polylines.values.first;
+
+    debugPrint("Polyline count: ${polylines.length}");
+    for (final p in polylines.entries) {
+      debugPrint(
+          "Polyline ${p.value.polylineId.value} points: ${p.value.points.length}");
+    }
+
+    return SizedBox(
+      height: 200,
+      width: double.infinity,
+      child: GoogleMap(
+        initialCameraPosition: CameraPosition(
+          target: firstPolyline.points.first,
+          zoom: 13,
+        ),
+        polylines: Set<Polyline>.of(polylines.values),
+        zoomControlsEnabled: false,
+        mapToolbarEnabled: false,
+        myLocationEnabled: false,
+        myLocationButtonEnabled: false,
+        compassEnabled: false,
       ),
     );
   }

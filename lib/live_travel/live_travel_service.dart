@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:travelr/live_travel/location_service.dart';
@@ -113,15 +112,18 @@ class LiveTravelService {
       return;
     }
 
-    _applyParticipantEta(
-      userId: parsed["user_id"],
-      eta: parsed["eta"] as int,
-    );
+    _applyParticipantEta(data: parsed);
   }
 
   // Location Update Sender
   void _startLocationUpdates() async {
     _selfLocation = await LocationService.getCurrentLocation();
+    print("Sending Data...");
+    _ws.send({
+      "user_id": _userId,
+      "lat": _selfLocation!.latitude,
+      "lng": _selfLocation!.longitude,
+    });
 
     _locationSub =
         LocationService.getLocationStream(distanceFilter: 25).listen((pos) {
@@ -137,15 +139,18 @@ class LiveTravelService {
   }
 
   // Session Updater
-  void _applyParticipantEta({required String userId, required int eta}) {
+  void _applyParticipantEta({required Map<String, dynamic> data}) {
     if (_session == null) return;
     print("Some shit was updated");
 
     final now = DateTime.now();
-    final etaAdded = now.add(Duration(seconds: eta));
+    final etaAdded = now.add(Duration(seconds: data["eta"]));
     TimeOfDay newEta = TimeOfDay(hour: etaAdded.hour, minute: etaAdded.minute);
-    _session =
-        _session!.updateWithUID(userId: userId, newEtaAtMeetPoint: newEta);
+    _session = _session!.updateWithUID(
+        userId: data["user_id"],
+        newEtaAtMeetPoint: newEta,
+        newProgressPercent: data["progressPercent"],
+        polyline: data["polyline"]);
     sessionNotifier.value = _session;
     print("Update Successful");
   }
