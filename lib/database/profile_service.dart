@@ -60,11 +60,19 @@ class ProfilesDatabase {
 
   static Future<void> updateProfile(Profile user) async {
     try {
-      await usersCollection.doc(user.uid).update(user.toJson());
+      await usersCollection
+          .doc(user.uid)
+          .set(user.toJson(), SetOptions(merge: true));
+
       final CollectionReference userFormCollection =
           FirebaseFirestore.instance.collection('userForms');
+
       Map<String, dynamic> convertedJson = convert(user);
-      await userFormCollection.doc(user.uid).update(convertedJson);
+
+      await userFormCollection
+          .doc(user.uid)
+          .set(convertedJson, SetOptions(merge: true));
+
       print("Profile updated successfully!");
     } catch (e) {
       print("Error updating user: $e");

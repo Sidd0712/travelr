@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:travelr/database/profile_model.dart';
 import 'package:travelr/database/profile_service.dart';
 import 'package:travelr/home/main_fragment.dart';
+import 'package:travelr/notifications/notification_router.dart';
+import 'package:travelr/notifications/notification_service.dart';
 
 class AuthService {
   Future<void> signUp(
@@ -57,6 +59,11 @@ class AuthService {
                 Text("Sign-Up Successful!")
               ],
             )),
+      );
+
+      await NotificationService().init(
+        onForeground: NotificationRouter.handleForegroundNotification,
+        onTap: NotificationRouter.handleNotificationTap,
       );
 
       navigator.pushReplacement(
@@ -126,6 +133,11 @@ class AuthService {
                 Text("Sign-In Successful!")
               ],
             )),
+      );
+
+      await NotificationService().init(
+        onForeground: NotificationRouter.handleForegroundNotification,
+        onTap: NotificationRouter.handleNotificationTap,
       );
 
       navigator.pushReplacement(

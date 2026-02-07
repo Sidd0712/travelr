@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:travelr/database/profile_service.dart';
 
 // Enums
 enum TravelStatus {
@@ -280,6 +281,62 @@ class LiveTravelSession {
       participants: updatedParticipants,
       currentlyTravellingWith: currentlyTravellingWith,
       updatedAt: updatedAt ?? DateTime.now(),
+    );
+  }
+
+  static Future<LiveTravelSession> fromTripApi(
+      Map<String, dynamic> json) async {
+    final members =
+        (json['members'] as List? ?? []).map((e) => e.toString()).toList();
+
+    final timelinePayload = json['timeline'];
+    final List<dynamic> events = timelinePayload is Map
+        ? (timelinePayload['timeline'] as List? ?? [])
+        : (timelinePayload as List? ?? []);
+
+    String meetPoint = 'Meet point';
+    for (final e in events) {
+      if (e is Map && e['event'] == 'MEET') {
+        final loc = e['location'];
+        if (loc is Map && loc['lat'] != null && loc['lng'] != null) {
+          meetPoint = '${loc['lat']}, ${loc['lng']}';
+          break;
+        }
+      }
+    }
+
+    final profileFutures = members.map((uid) {
+      return ProfilesDatabase.getProfilePartialFromUID(uid);
+    }).toList();
+
+    final profileResults = await Future.wait(profileFutures);
+    final nameByUid = <String, String>{};
+    for (final result in profileResults) {
+      nameByUid.addAll(result);
+    }
+
+    final participants = members.map((uid) {
+      return TravelParticipant.mock(
+        id: uid,
+        name: nameByUid[uid] ?? "Unknown",
+        location: 'Unknown',
+        etaAtMeetPoint: const TimeOfDay(hour: 0, minute: 0),
+        progress: 0.0,
+      );
+    }).toList();
+
+    final updatedAt = DateTime.tryParse(
+          (json['updatedAt'] ?? '').toString(),
+        ) ??
+        DateTime.now();
+
+    return LiveTravelSession(
+      sessionId: (json['roomID'] ?? json['roomId'] ?? '').toString(),
+      groupName: (json['groupName'] ?? '').toString(),
+      meetPoint: meetPoint,
+      participants: participants,
+      currentlyTravellingWith: const [],
+      updatedAt: updatedAt,
     );
   }
 }

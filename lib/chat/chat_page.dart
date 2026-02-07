@@ -1,11 +1,10 @@
 import 'dart:convert';
-
+import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:travelr/database/chat_service.dart';
 import 'package:travelr/database/message_model.dart';
-import 'package:travelr/database/profile_service.dart';
 import 'package:travelr/live_travel/live_travel_controller.dart';
 import 'package:travelr/live_travel/live_travel_model.dart';
 import 'package:travelr/live_travel/live_travel_pane.dart';
@@ -33,44 +32,16 @@ class _ChatPageState extends State<ChatPage> {
     _initializeChatData();
   }
 
-  String getOtherUserId({
-    required String roomId,
-    required String currentUserId,
-  }) {
-    // dm_uid1_uid2
-    final parts = roomId.split('_');
-
-    if (parts.length != 3) {
-      throw Exception("Invalid roomId format: $roomId");
-    }
-
-    final uid1 = parts[1];
-    final uid2 = parts[2];
-
-    return uid1 == currentUserId ? uid2 : uid1;
-  }
-
-  Future<String> getChatDisplayName({
-    required String roomId,
-    required String currentUserId,
-  }) async {
-    final otherUid = getOtherUserId(
-      roomId: roomId,
-      currentUserId: currentUserId,
-    );
-
-    final profile = await ProfilesDatabase.getProfilePartialFromUID(otherUid);
-    return profile[otherUid] ?? "Unknown User";
+  Future<String> getChatDisplayName({required String roomId}) async {
+    final name = await ChatService.getChatGroupName(roomId);
+    return name ?? "Unknown Group";
   }
 
   Future<void> _initializeChatData() async {
     _currentUserID = FirebaseAuth.instance.currentUser?.uid ?? '';
     _members = await ChatService.getMemberProfiles(widget.roomID);
 
-    final name = await getChatDisplayName(
-      roomId: widget.roomID,
-      currentUserId: _currentUserID!,
-    );
+    final name = await getChatDisplayName(roomId: widget.roomID);
 
     if (!mounted) return;
 
@@ -80,19 +51,53 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void sendMessage() async {
-    if (_messagesController.text.isNotEmpty) {
-      await ChatService.sendMessage(widget.roomID, _messagesController.text);
+    final text = _messagesController.text.trim();
+    if (text.isEmpty) return;
 
-      _messagesController.clear();
+    _messagesController.clear();
 
-      Future.delayed(Duration(milliseconds: 100), () {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      });
-    }
+    await ChatService.sendMessage(widget.roomID, text);
+
+    _sendChatNotification(text);
+
+    Future.delayed(Duration(milliseconds: 100), () {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  Future<void> _sendChatNotification(String message) async {
+    if (_members == null || _currentUserID == null) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final uri = Uri.parse(
+      'https://travelr-ml.onrender.com/chat/send',
+    );
+
+    final idToken = await user.getIdToken();
+
+    var response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $idToken',
+      },
+      body: jsonEncode({
+        'room_id': widget.roomID,
+        'members': _members!.keys.toList(),
+        'message': message,
+        'sender_uid': _currentUserID,
+        'sender_name': _members![_currentUserID],
+        'group_name': _groupName!
+      }),
+    );
+
+    log(response.body);
   }
 
   @override
@@ -126,31 +131,39 @@ class _ChatPageState extends State<ChatPage> {
                   debugPrint("Calling API...");
                   final uri = Uri.https(
                     'travelr-ml.onrender.com',
-                    '/trip',
-                    {
-                      'user1_id': _currentUserID!,
-                      'user2_id': _members!.keys.first,
-                    },
+                    '/trip/${widget.roomID}',
                   );
 
                   try {
-                    final response = await http.get(uri);
+                    final idToken =
+                        await FirebaseAuth.instance.currentUser!.getIdToken();
+
+                    final response = await http.get(
+                      uri,
+                      headers: {
+                        'Authorization': 'Bearer $idToken',
+                      },
+                    );
+
                     debugPrint("Recieved Output");
 
                     if (response.statusCode != 200) {
-                      debugPrint("Trip API failed: ${response.statusCode}");
+                      debugPrint("Trip API failed: ${response.body}");
                       return;
                     }
 
                     final data = json.decode(response.body);
+                    log(jsonEncode(data));
 
                     debugPrint("Starting Controller");
+                    final session = await LiveTravelSession.fromTripApi(data);
+
                     _controller.start(
                       roomId: widget.roomID,
                       userId: _currentUserID!,
-                      initialSession: LiveTravelSession.test(
-                          widget.roomID, widget.groupName),
+                      initialSession: session,
                     );
+
                     debugPrint("Controller Started");
                   } catch (e) {
                     debugPrint("Trip start failed: $e");

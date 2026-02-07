@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging_platform_interface/src/remote_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:travelr/home/main_fragment.dart';
 import 'package:travelr/login/login.dart';
+import 'package:travelr/notifications/notification_router.dart';
+import 'package:travelr/notifications/notification_service.dart';
 
 class SplashScreenPage extends StatefulWidget {
   const SplashScreenPage({super.key, required this.title});
@@ -20,10 +23,15 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
 
     Future.wait(
             [Future.delayed(const Duration(seconds: 3)), _checkAuthStatus()])
-        .then((results) {
+        .then((results) async {
       final isLoggedIn = results[1] as bool;
 
       if (isLoggedIn) {
+        await NotificationService().init(
+          onForeground: NotificationRouter.handleForegroundNotification,
+          onTap: NotificationRouter.handleNotificationTap,
+        );
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
