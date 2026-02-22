@@ -119,11 +119,33 @@ class LiveTravelService {
   void _startLocationUpdates() async {
     _selfLocation = await LocationService.getCurrentLocation();
     print("Sending Data...");
+
     _ws.send({
       "user_id": _userId,
       "lat": _selfLocation!.latitude,
       "lng": _selfLocation!.longitude,
     });
+
+    // Location 1
+    // _ws.send({
+    //   "user_id": _userId,
+    //   "lat": 19.165332377080055,
+    //   "lng": 72.93790753568143,
+    // });
+
+    // Location 2
+    // _ws.send({
+    //   "user_id": _userId,
+    //   "lat": 19.17383951762901,
+    //   "lng": 72.94130282792788,
+    // });
+
+    // Location 3
+    // _ws.send({
+    //   "user_id": _userId,
+    //   "lat": 19.183361377322914,
+    //   "lng": 72.94867418559427,
+    // });
 
     _locationSub =
         LocationService.getLocationStream(distanceFilter: 5).listen((pos) {
@@ -135,6 +157,27 @@ class LiveTravelService {
         "lat": pos.latitude,
         "lng": pos.longitude,
       });
+
+      // Location 1
+      // _ws.send({
+      //   "user_id": _userId,
+      //   "lat": 19.165332377080055,
+      //   "lng": 72.93790753568143,
+      // });
+
+      // Location 2
+      // _ws.send({
+      //   "user_id": _userId,
+      //   "lat": 19.17383951762901,
+      //   "lng": 72.94130282792788,
+      // });
+
+      // Location 3
+      // _ws.send({
+      //   "user_id": _userId,
+      //   "lat": 19.183361377322914,
+      //   "lng": 72.94867418559427,
+      // });
     });
   }
 

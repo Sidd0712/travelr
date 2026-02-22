@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:developer';
 import 'package:travelr/chat/create_chat.dart';
 import 'package:travelr/database/profile_model.dart';
 import 'package:travelr/database/profile_service.dart';
@@ -37,7 +38,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (widget.parent == "Sign-In") {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // 🔥 ALLOW DRAWING BEHIND SYSTEM UI
         SystemChrome.setEnabledSystemUIMode(
           SystemUiMode.edgeToEdge,
         );
@@ -57,6 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _carouselShown = true;
 
     final data = await RecommenderService.getRecommendations(uid);
+
+    log(data.toString());
 
     final List<Recommendation> recommendations =
         (data as List).map((j) => Recommendation.fromJson(j)).toList();

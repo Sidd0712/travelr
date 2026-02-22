@@ -21,6 +21,7 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
     with TickerProviderStateMixin {
   bool expanded = false;
   GoogleMapController? _mapController;
+  String? _lastFitKey;
 
   Row header() {
     return Row(
@@ -218,6 +219,114 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
     return decoded.map((p) => LatLng(p.latitude, p.longitude)).toList();
   }
 
+  Color _routeColorForIndex(int index, bool isMe) {
+    if (isMe) return Colors.blue.shade700;
+    const palette = [
+      Colors.teal,
+      Colors.deepOrange,
+      Colors.purple,
+      Colors.indigo,
+      Colors.green,
+      Colors.brown,
+      Colors.pink,
+    ];
+    return palette[index % palette.length].shade600;
+  }
+
+  Future<void> _zoomBy(double delta) async {
+    final controller = _mapController;
+    if (controller == null) return;
+    final zoom = await controller.getZoomLevel();
+    await controller.animateCamera(CameraUpdate.zoomTo(zoom + delta));
+  }
+
+  Widget _zoomButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(icon, size: 20, color: Colors.black87),
+        ),
+      ),
+    );
+  }
+
+  void _maybeFitCamera(Set<Polyline> polylines, String fitKey) {
+    if (_mapController == null || polylines.isEmpty) return;
+    if (_lastFitKey == fitKey) return;
+    _lastFitKey = fitKey;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || _mapController == null) return;
+      await _fitCameraToPolylines(polylines);
+    });
+  }
+
+  Future<void> _fitCameraToPolylines(Set<Polyline> polylines) async {
+    if (polylines.isEmpty) return;
+
+    double? minLat;
+    double? maxLat;
+    double? minLng;
+    double? maxLng;
+
+    for (final polyline in polylines) {
+      for (final point in polyline.points) {
+        if (minLat == null || point.latitude < minLat!) {
+          minLat = point.latitude;
+        }
+        if (maxLat == null || point.latitude > maxLat!) {
+          maxLat = point.latitude;
+        }
+        if (minLng == null || point.longitude < minLng!) {
+          minLng = point.longitude;
+        }
+        if (maxLng == null || point.longitude > maxLng!) {
+          maxLng = point.longitude;
+        }
+      }
+    }
+
+    if (minLat == null || maxLat == null || minLng == null || maxLng == null) {
+      return;
+    }
+
+    final hasArea =
+        (maxLat - minLat).abs() > 0.0001 || (maxLng - minLng).abs() > 0.0001;
+
+    if (!hasArea) {
+      await _mapController?.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: LatLng(minLat, minLng), zoom: 15),
+        ),
+      );
+      return;
+    }
+
+    final bounds = LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+
+    await _mapController?.animateCamera(
+      CameraUpdate.newLatLngBounds(bounds, 48),
+    );
+  }
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final me = widget.session.participantFor(widget.currentUserId);
@@ -299,6 +408,8 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
     }
 
     final Map<PolylineId, Polyline> polylines = {};
+    final Set<Marker> markers = {};
+    int routeIndex = 0;
 
     for (final participant in participants) {
       if (participant.polyline?.isEmpty ?? true) continue;
@@ -306,14 +417,56 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
       final points = decodePolyline(participant.polyline!);
       if (points.isEmpty) continue;
 
-      polylines[PolylineId(participant.userId)] = Polyline(
-        polylineId: PolylineId(participant.userId),
+      final isMe = participant.userId == widget.currentUserId;
+      final routeColor = _routeColorForIndex(routeIndex, isMe);
+      final outlineColor = Colors.black.withValues(alpha: 0.35);
+
+      polylines[PolylineId('${participant.userId}_base')] = Polyline(
+        polylineId: PolylineId('${participant.userId}_base'),
         points: points,
-        width: participant.userId == widget.currentUserId ? 6 : 4,
-        color: participant.userId == widget.currentUserId
-            ? Colors.blue
-            : Colors.yellow.shade700,
+        width: isMe ? 10 : 8,
+        color: outlineColor,
+        zIndex: isMe ? 2 : 1,
       );
+
+      polylines[PolylineId('${participant.userId}_main')] = Polyline(
+        polylineId: PolylineId('${participant.userId}_main'),
+        points: points,
+        width: isMe ? 6 : 4,
+        color: routeColor,
+        zIndex: isMe ? 3 : 2,
+      );
+
+      final start = points.first;
+      final end = points.last;
+
+      markers.add(
+        Marker(
+          markerId: MarkerId('start_${participant.userId}'),
+          position: start,
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            isMe ? BitmapDescriptor.hueGreen : BitmapDescriptor.hueAzure,
+          ),
+          infoWindow: InfoWindow(
+            title: isMe ? 'Your start' : '${participant.name} start',
+          ),
+        ),
+      );
+
+      markers.add(
+        Marker(
+          markerId: MarkerId('end_${participant.userId}'),
+          position: end,
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            isMe ? BitmapDescriptor.hueRed : BitmapDescriptor.hueOrange,
+          ),
+          infoWindow: InfoWindow(
+            title: isMe ? 'Your destination' : '${participant.name} destination',
+          ),
+        ),
+      );
+
+      routeIndex += 1;
     }
 
     if (polylines.isEmpty) {
@@ -323,7 +476,17 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
       );
     }
 
-    final firstPolyline = polylines.values.first;
+    final fitPolylines = polylines.values
+        .where((polyline) => polyline.polylineId.value.endsWith('_main'))
+        .toSet();
+    final fitKey = participants
+        .where((p) => p.polyline?.isNotEmpty ?? false)
+        .map((p) => '${p.userId}:${p.polyline.hashCode}')
+        .join('|');
+
+    if (_mapController != null && fitPolylines.isNotEmpty) {
+      _maybeFitCamera(fitPolylines, fitKey);
+    }
 
     debugPrint("Polyline count: ${polylines.length}");
     for (final p in polylines.entries) {
@@ -334,17 +497,42 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
     return SizedBox(
       height: 200,
       width: double.infinity,
-      child: GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: firstPolyline.points.first,
-          zoom: 13,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Stack(
+          children: [
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: fitPolylines.first.points.first,
+                zoom: 13,
+              ),
+              onMapCreated: (controller) {
+                _mapController = controller;
+                if (fitPolylines.isNotEmpty) {
+                  _maybeFitCamera(fitPolylines, fitKey);
+                }
+              },
+              polylines: Set<Polyline>.of(polylines.values),
+              markers: markers,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              myLocationEnabled: false,
+              myLocationButtonEnabled: false,
+              compassEnabled: false,
+            ),
+            Positioned(
+              right: 8,
+              bottom: 8,
+              child: Column(
+                children: [
+                  _zoomButton(icon: Icons.add, onTap: () => _zoomBy(1)),
+                  const SizedBox(height: 6),
+                  _zoomButton(icon: Icons.remove, onTap: () => _zoomBy(-1)),
+                ],
+              ),
+            ),
+          ],
         ),
-        polylines: Set<Polyline>.of(polylines.values),
-        zoomControlsEnabled: false,
-        mapToolbarEnabled: false,
-        myLocationEnabled: false,
-        myLocationButtonEnabled: false,
-        compassEnabled: false,
       ),
     );
   }

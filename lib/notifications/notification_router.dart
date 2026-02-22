@@ -1,7 +1,9 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:developer';
 
 class NotificationRouter {
   static void handleForegroundNotification(RemoteMessage message) {
+    log("Foreground Notification Recieved: ${message.data.toString()}");
     switch (message.data['type']) {
       case 'CHAT':
         // show banner

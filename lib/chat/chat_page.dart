@@ -177,27 +177,29 @@ class _ChatPageState extends State<ChatPage> {
           const SizedBox(width: 16),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15.0),
-        child: Column(
-          children: [
-            AnimatedBuilder(
-                animation: _controller,
-                builder: (_, __) {
-                  final session = _controller.session;
-                  if (session == null) return const SizedBox.shrink();
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15.0),
+          child: Column(
+            children: [
+              AnimatedBuilder(
+                  animation: _controller,
+                  builder: (_, __) {
+                    final session = _controller.session;
+                    if (session == null) return const SizedBox.shrink();
 
-                  return LiveTravelPane(
-                    session: session,
-                    currentUserId: _currentUserID!,
-                  );
-                }),
-            Expanded(
-              child: _buildMessagesList(),
-            ),
-            const SizedBox(height: 20),
-            _userInput(),
-          ],
+                    return LiveTravelPane(
+                      session: session,
+                      currentUserId: _currentUserID!,
+                    );
+                  }),
+              Expanded(
+                child: _buildMessagesList(),
+              ),
+              const SizedBox(height: 20),
+              _userInput(),
+            ],
+          ),
         ),
       ),
     );
@@ -239,7 +241,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildMessageItem(Message data) {
     bool isSent = data.senderID == _currentUserID;
     String message = data.message;
-    print(data.timestamp.toDate().toLocal().toString());
+    // print(data.timestamp.toDate().toLocal().toString());
 
     return Align(
       alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,

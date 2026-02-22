@@ -1,6 +1,3 @@
-// This is sample code of how it should be, but actual code will completely depend on the way the recommendations are given by the API.
-// Keep this as it is for now. Will instruct later.
-
 import 'package:flutter/material.dart';
 
 enum JourneyMode {
