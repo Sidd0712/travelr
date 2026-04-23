@@ -1,13 +1,17 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:travelr/friends/friends_service.dart';
 import 'package:travelr/recommender/recommendation_model.dart';
 
 class RecommenderCarousel extends StatefulWidget {
   final List<Recommendation> recommendations;
+  final VoidCallback onClose;
 
   const RecommenderCarousel({
     super.key,
     required this.recommendations,
+    required this.onClose,
   });
 
   @override
@@ -18,25 +22,50 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
   int currentIndex = 0;
   bool isFriend = false;
   bool allowTransportModes = true;
+  late List<Recommendation> _recommendations;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _recommendations = List<Recommendation>.from(
+      widget.recommendations,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final activeRecommendation = widget.recommendations[currentIndex];
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      systemNavigationBarColor:
+          const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.25),
+    ));
+    if (_recommendations.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onClose();
+      });
+      return const SizedBox.shrink();
+    }
+
+    final activeRecommendation = _recommendations[currentIndex];
     // will replace with API logic later
     isFriend = activeRecommendation.phoneNumber != null;
-    allowTransportModes = activeRecommendation.segments.isNotEmpty;
-    print("Recommendations count: ${widget.recommendations.length}");
+    allowTransportModes = activeRecommendation.segments?.isNotEmpty ?? false;
+    print("Recommendations count: ${_recommendations.length}");
+
     return Material(
       color: Colors.transparent,
       child: Stack(
         children: [
           // Blur + Dim Background
           Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
-                color: const Color.fromARGB(255, 0, 0, 0)
-                    .withValues(alpha: 0.55),
+            child: GestureDetector(
+              onTap: widget.onClose,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  color: const Color.fromARGB(255, 0, 0, 0)
+                      .withValues(alpha: 0.25),
+                ),
               ),
             ),
           ),
@@ -48,7 +77,6 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-
                   const Text(
                     "Travel Buddies Found",
                     style: TextStyle(
@@ -57,12 +85,10 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   Expanded(
                     child: PageView.builder(
-                      itemCount: widget.recommendations.length,
+                      itemCount: _recommendations.length,
                       controller: PageController(viewportFraction: 0.9),
                       onPageChanged: (index) {
                         setState(() {
@@ -71,10 +97,9 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                       },
                       itemBuilder: (context, index) {
                         return Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: RecommendationCard(
-                            recommendation: widget.recommendations[index],
+                            recommendation: _recommendations[index],
                             allowTransportModes: allowTransportModes,
                             allowPhoneNumber: isFriend,
                           ),
@@ -82,17 +107,15 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                       },
                     ),
                   ),
-
                   const SizedBox(height: 12),
-
-                  Row( //page indicator
+                  Row(
+                    //page indicator
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
-                      widget.recommendations.length,
+                      _recommendations.length,
                       (index) => AnimatedContainer(
                         duration: const Duration(milliseconds: 250),
-                        margin:
-                            const EdgeInsets.symmetric(horizontal: 4),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
                         width: currentIndex == index ? 12 : 6,
                         height: 6,
                         decoration: BoxDecoration(
@@ -104,35 +127,63 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
                   TextButton(
                     onPressed: isFriend
-                    ? () {
-                    }
-                    : () { // TODO: Send Request logic (later)
-                    },
+                        ? widget.onClose
+                        : () async {
+                            try {
+                              await FriendsService.sendFriendRequest(
+                                activeRecommendation.uid,
+                              );
 
-                style: const ButtonStyle(
-                fixedSize: WidgetStatePropertyAll(Size(200, 50)),
-                backgroundColor: WidgetStatePropertyAll(Colors.blue),
-                shape: WidgetStatePropertyAll(
-                RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "Friend Request sent to ${activeRecommendation.name}",
+                                  ),
+                                ),
+                              );
+
+                              setState(() {
+                                _recommendations.remove(activeRecommendation);
+
+                                if (_recommendations.isEmpty) {
+                                  widget.onClose();
+                                  return;
+                                }
+
+                                currentIndex = currentIndex.clamp(
+                                  0,
+                                  _recommendations.length - 1,
+                                );
+                              });
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            }
+                          },
+                    style: const ButtonStyle(
+                      fixedSize: WidgetStatePropertyAll(Size(200, 50)),
+                      backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                      shape: WidgetStatePropertyAll(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      isFriend ? "Close" : "Send Request",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ),
-            ),
-          ),
-
-            child: Text(
-              isFriend ? "Close": "Send Request",
-            style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-          ),
-        ),
-      ),
-    ],
-  ),
             ),
           ),
         ],
@@ -146,7 +197,6 @@ class RecommendationCard extends StatefulWidget {
   final bool allowTransportModes;
   final bool allowPhoneNumber;
 
-
   const RecommendationCard({
     super.key,
     required this.recommendation,
@@ -155,17 +205,16 @@ class RecommendationCard extends StatefulWidget {
   });
 
   @override
-  State<RecommendationCard> createState() =>
-      _RecommendationCardState();
+  State<RecommendationCard> createState() => _RecommendationCardState();
 }
 
 class _RecommendationCardState extends State<RecommendationCard> {
   bool showDetails = false;
   void _toggleDetails() {
-  setState(() {
-    showDetails = !showDetails;
-  });
-}
+    setState(() {
+      showDetails = !showDetails;
+    });
+  }
 
   IconData _iconForMode(String mode) {
     switch (mode.toLowerCase()) {
@@ -194,174 +243,174 @@ class _RecommendationCardState extends State<RecommendationCard> {
           children: [
             // Map placeholder
             Container(
-            height: 160,
-            width: double.infinity,
-            decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 255, 255, 255),
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-            BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
+              height: 160,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 255, 255, 255),
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                  BoxShadow(
+                    color: const Color.fromARGB(255, 0, 0, 0)
+                        .withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Opacity(
+                      opacity: 0.08,
+                      child: Icon(
+                        Icons.map,
+                        size: 140,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
 
-    BoxShadow(
-      color: const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.25),
-      blurRadius: 8,
-      offset: const Offset(0, 4),
-    ),
-  ],
-),
-  child: Stack(
-    children: [
-      Positioned.fill(
-        child: Opacity(
-          opacity: 0.08,
-          child: Icon(
-            Icons.map,
-            size: 140,
-            color: Colors.black,
-          ),
-        ),
-      ),
-
-      // Center label
-      Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(
-              Icons.location_on,
-              color: Colors.blue,
-              size: 28,
-            ),
-            SizedBox(height: 6),
-            Text(
-              "Route Preview",
-              style: TextStyle(
-                color: Colors.black87,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+                  // Center label
+                  Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(
+                          Icons.location_on,
+                          color: Colors.blue,
+                          size: 28,
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          "Route Preview",
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    ],
-  ),
-),
 
             const SizedBox(height: 16),
-           Center(
-            child: Row(
-            mainAxisSize: MainAxisSize.min, 
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-        CircleAvatar(
-          radius: 22,
-          backgroundColor: Colors.grey.shade300,
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: Colors.grey.shade300,
 
-  // When you have an image URL later, this line will activate
-  // backgroundImage: NetworkImage(widget.recommendation.profileImageUrl),
+                    // When you have an image URL later, this line will activate
+                    // backgroundImage: NetworkImage(widget.recommendation.profileImageUrl),
 
-  child: const Text(
-    "DP",
-    style: TextStyle(
-      color: Colors.black87,
-      fontWeight: FontWeight.w500,
-    ),
-  ),
-),
-        const SizedBox(width: 12),
-        // Name + gender/age
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              widget.recommendation.name,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+                    child: const Text(
+                      "DP",
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Name + gender/age
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.recommendation.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "${widget.recommendation.gender}  ${widget.recommendation.age}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              "${widget.recommendation.gender}  ${widget.recommendation.age}",
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  ),
-  const SizedBox(height: 6),
+            const SizedBox(height: 6),
 
-    if (widget.allowPhoneNumber && widget.recommendation.phoneNumber != null)
-    Text(
-      widget.recommendation.phoneNumber!,
-      style: const TextStyle(
-      color: Colors.white,
-      fontSize: 13,
-      fontWeight: FontWeight.w500,
-      ),
-    ),
-          const SizedBox(height: 16),
+            if (widget.allowPhoneNumber &&
+                widget.recommendation.phoneNumber != null)
+              Text(
+                widget.recommendation.phoneNumber!,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            const SizedBox(height: 16),
             // Overlap pill + progress bar
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-
-          const SizedBox(height: 6),
-
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  LinearProgressIndicator(
-                    value: widget.recommendation.overlapPercent,
-                    minHeight: 18, // pill height
-                    backgroundColor: Colors.green.withValues(alpha: 0.25),
-                    valueColor:
-                      const AlwaysStoppedAnimation<Color>(Colors.green),
-                    ),
-                   Text(
-                      "Shared Route : ${widget.recommendation.overlapDist.toStringAsFixed(1)} km",
-                      style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      LinearProgressIndicator(
+                        value: widget.recommendation.overlapPercent,
+                        minHeight: 36, // pill height
+                        backgroundColor: Colors.green.withValues(alpha: 0.25),
+                        valueColor:
+                            const AlwaysStoppedAnimation<Color>(Colors.green),
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
-                    ),
-                ],
-              ),
-              ),
+                      Text(
+                        "Shared Route : ${widget.recommendation.overlapDist.toStringAsFixed(1)} km",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            if (widget.allowTransportModes) 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: widget.recommendation.segments.map((segment) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: Icon(
-                  _iconForMode(segment.mode),
-                  size: 20,
-                  color: Colors.white70,
-                ),
-              );
-            }).toList(),
-            ),
+            if (widget.allowTransportModes)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: widget.recommendation.segments!.map((segment) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Icon(
+                      _iconForMode(segment.mode),
+                      size: 20,
+                      color: Colors.white70,
+                    ),
+                  );
+                }).toList(),
+              ),
 
-             const SizedBox(height: 12),
+            const SizedBox(height: 12),
             // Meet / Split
             Text(
               "Meet: ${widget.recommendation.meetPoint}",
@@ -374,118 +423,117 @@ class _RecommendationCardState extends State<RecommendationCard> {
 
             const SizedBox(height: 12),
             if (widget.recommendation.canShowETA &&
-              widget.recommendation.etaAtMeetPoint != null)
+                widget.recommendation.etaAtMeetPoint != null)
               Text(
                 "ETA at meet point: ${widget.recommendation.etaAtMeetPoint!.format(context)}",
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 12,
-                  ),
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 12,
                 ),
+              ),
             const SizedBox(height: 12),
             // COLLAPSED STATE → View Details
-if (!showDetails && widget.allowTransportModes)
-  TextButton(
-    onPressed: _toggleDetails,
-    style: const ButtonStyle(
-      overlayColor: WidgetStatePropertyAll(Colors.transparent),
-      padding: WidgetStatePropertyAll(
-        EdgeInsets.symmetric(vertical: 6),
-      ),
-    ),
-    child: const Text(
-      "View Details",
-      style: TextStyle(
-        color: Colors.blue,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-      ),
-    ),
-  ),
-
-          
-  //         if (widget.allowTransportModes)
-  // TextButton(
-  //   onPressed: _toggleDetails,
-  //   style: const ButtonStyle(
-  //     overlayColor: WidgetStatePropertyAll(Colors.transparent),
-  //     padding: WidgetStatePropertyAll(
-  //       EdgeInsets.symmetric(vertical: 6),
-  //     ),
-  //   ),
-  //   child: Text(
-  //     showDetails ? "Hide Details" : "View Details",
-  //     style: const TextStyle(
-  //       color: Colors.blue,
-  //       fontSize: 14,
-  //       fontWeight: FontWeight.w500,
-  //     ),
-  //   ),
-  // ),
-
-if (showDetails && widget.allowTransportModes)
-  Column(
-    children: [
-      const SizedBox(height: 12),
-
-      SizedBox(
-        height: 140,
-        child: SingleChildScrollView(
-          child: Column(
-            children: widget.recommendation.segments.map((segment) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    Icon(
-                      _iconForMode(segment.mode),
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        "${segment.mode}: ${segment.from} → ${segment.to}",
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    Text(
-                      "${segment.startTime.format(context)} - ${segment.endTime.format(context)}",
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+            if (!showDetails && widget.allowTransportModes)
+              TextButton(
+                onPressed: _toggleDetails,
+                style: const ButtonStyle(
+                  overlayColor: WidgetStatePropertyAll(Colors.transparent),
+                  padding: WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(vertical: 6),
+                  ),
                 ),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-      const SizedBox(height: 8),
-      TextButton(
-        onPressed: _toggleDetails,
-        style: const ButtonStyle(
-          overlayColor: WidgetStatePropertyAll(Colors.transparent),
-          padding: WidgetStatePropertyAll(
-            EdgeInsets.symmetric(vertical: 6),
-          ),
-        ),
-        child: const Text(
-          "Hide Details",
-          style: TextStyle(
-            color: Colors.blue,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        ),
-    ],
-  ),      
+                child: const Text(
+                  "View Details",
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+
+            //         if (widget.allowTransportModes)
+            // TextButton(
+            //   onPressed: _toggleDetails,
+            //   style: const ButtonStyle(
+            //     overlayColor: WidgetStatePropertyAll(Colors.transparent),
+            //     padding: WidgetStatePropertyAll(
+            //       EdgeInsets.symmetric(vertical: 6),
+            //     ),
+            //   ),
+            //   child: Text(
+            //     showDetails ? "Hide Details" : "View Details",
+            //     style: const TextStyle(
+            //       color: Colors.blue,
+            //       fontSize: 14,
+            //       fontWeight: FontWeight.w500,
+            //     ),
+            //   ),
+            // ),
+
+            if (showDetails && widget.allowTransportModes)
+              Column(
+                children: [
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 140,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children:
+                            widget.recommendation.segments!.map((segment) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _iconForMode(segment.mode),
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    "${segment.mode}: ${segment.from} → ${segment.to}",
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                                Text(
+                                  "${segment.startTime.format(context)} - ${segment.endTime.format(context)}",
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: _toggleDetails,
+                    style: const ButtonStyle(
+                      overlayColor: WidgetStatePropertyAll(Colors.transparent),
+                      padding: WidgetStatePropertyAll(
+                        EdgeInsets.symmetric(vertical: 6),
+                      ),
+                    ),
+                    child: const Text(
+                      "Hide Details",
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
     );
   }
-}        
+}

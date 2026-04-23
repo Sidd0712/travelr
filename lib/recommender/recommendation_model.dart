@@ -1,6 +1,3 @@
-// This is sample code of how it should be, but actual code will completely depend on the way the recommendations are given by the API.
-// Keep this as it is for now. Will instruct later.
-
 import 'package:flutter/material.dart';
 
 enum JourneyMode {
@@ -8,8 +5,8 @@ enum JourneyMode {
   public,
 }
 
-
 class Recommendation {
+  final String uid;
   final String name;
   final String gender;
   final int age;
@@ -17,14 +14,14 @@ class Recommendation {
   final double overlapPercent;
   final String meetPoint;
   final String splitPoint;
-  final List<RouteSegment> segments;
+  final List<RouteSegment>? segments;
   // Friend-only
   final String? phoneNumber;
   final TimeOfDay? etaAtMeetPoint;
   bool get canShowETA => true;
 
-
   Recommendation({
+    required this.uid,
     required this.name,
     required this.gender,
     required this.age,
@@ -32,23 +29,26 @@ class Recommendation {
     required this.overlapPercent,
     required this.meetPoint,
     required this.splitPoint,
-    required this.segments,
+    this.segments,
     this.phoneNumber,
     this.etaAtMeetPoint,
   });
 
   factory Recommendation.fromJson(Map<String, dynamic> json) {
     return Recommendation(
+      uid: json['user_id'],
       name: json['name'],
-      gender: json['gender'],
-      age: json['age'],
-      overlapDist: json["overlap_dist"],
-      overlapPercent: json["overlap_percent"],
-      meetPoint: json['meet_point'],
-      splitPoint: json['split_point'],
-      segments: (json['segments'] as List)
-          .map((e) => RouteSegment.fromJson(e))
-          .toList(),
+      gender: json['gender'] ?? "XXXX",
+      age: json['age'] ?? 20,
+      overlapDist: json["overlap_distance_km"],
+      overlapPercent: json["overlap_ratio"],
+      meetPoint: (json['meet_point'] as List).join(", "),
+      splitPoint: (json['split_point'] as List).join(", "),
+      segments: json.containsKey("segments") && json["segments"] != null
+          ? (json['segments'] as List)
+              .map((e) => RouteSegment.fromJson(e))
+              .toList()
+          : null,
     );
   }
 }
@@ -86,4 +86,3 @@ class RouteSegment {
     );
   }
 }
-

@@ -138,4 +138,23 @@ class ChatService {
       return {};
     }
   }
+
+  static Future<String?> getChatGroupName(String roomID) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(roomID)
+          .get();
+
+      if (!doc.exists) return null;
+
+      final data = doc.data();
+      if (data == null) return null;
+
+      return data['groupName'] as String?;
+    } catch (e) {
+      print("Error getting chat group name: $e");
+      return null;
+    }
+  }
 }

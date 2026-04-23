@@ -64,8 +64,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: TextButton(
                 onPressed: () {
                   if (currentIndex == slides.length - 1) {
-                    Navigator.pushReplacement(context,
-                        MaterialPageRoute(builder: (_) => const HomeScreen()));
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                const HomeScreen(parent: "Sign-Up")));
                   } else {
                     _controller.nextPage(
                         duration: const Duration(milliseconds: 300),
@@ -73,11 +76,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   }
                 },
                 style: const ButtonStyle(
-                  fixedSize:
-                      MaterialStatePropertyAll(Size(double.infinity, 50)),
-                  padding: MaterialStatePropertyAll(EdgeInsets.zero),
-                  backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                  fixedSize: WidgetStatePropertyAll(Size(double.infinity, 50)),
+                  padding: WidgetStatePropertyAll(EdgeInsets.zero),
+                  backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                  shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10)))),
                 ),
                 child: Center(

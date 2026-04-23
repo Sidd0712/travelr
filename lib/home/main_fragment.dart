@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:developer';
 import 'package:travelr/chat/create_chat.dart';
 import 'package:travelr/database/profile_model.dart';
 import 'package:travelr/database/profile_service.dart';
@@ -9,10 +10,14 @@ import 'package:travelr/live_travel/live_travel_controller.dart';
 import 'package:travelr/live_travel/live_travel_pane.dart';
 import 'package:travelr/home/profile_page.dart';
 import 'package:travelr/profile/update_profile.dart';
-import 'package:travelr/requests/friends_page.dart';
+import 'package:travelr/recommender/recommendation_model.dart';
+import 'package:travelr/recommender/recommender_carousel.dart';
+import 'package:travelr/recommender/recommender_service.dart';
+import 'package:travelr/friends/friends_page.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String parent;
+  const HomeScreen({super.key, required this.parent});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -23,11 +28,44 @@ class _HomeScreenState extends State<HomeScreen> {
   Profile? user;
   String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
   final LiveTravelController _controller = LiveTravelController();
+  OverlayEntry? _carouselOverlay;
+  bool _carouselShown = false;
 
   @override
   void initState() {
     super.initState();
     fetchUserProfile();
+
+    if (widget.parent == "Sign-In") {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        SystemChrome.setEnabledSystemUIMode(
+          SystemUiMode.edgeToEdge,
+        );
+        _loadRecommendations();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    hideRecommenderCarousel();
+    super.dispose();
+  }
+
+  Future<void> _loadRecommendations() async {
+    if (_carouselShown) return;
+    _carouselShown = true;
+
+    final data = await RecommenderService.getRecommendations(uid);
+
+    log(data.toString());
+
+    final List<Recommendation> recommendations =
+        (data as List).map((j) => Recommendation.fromJson(j)).toList();
+
+    if (recommendations.isNotEmpty && mounted) {
+      showRecommenderCarousel(recommendations);
+    }
   }
 
   void fetchUserProfile() async {
@@ -41,6 +79,27 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  void showRecommenderCarousel(List<Recommendation> recs) {
+    if (_carouselOverlay != null) return;
+
+    _carouselOverlay = OverlayEntry(
+      builder: (context) {
+        return RecommenderCarousel(
+            recommendations: recs,
+            onClose: () {
+              hideRecommenderCarousel();
+            });
+      },
+    );
+
+    Overlay.of(context, rootOverlay: true).insert(_carouselOverlay!);
+  }
+
+  void hideRecommenderCarousel() {
+    _carouselOverlay?.remove();
+    _carouselOverlay = null;
   }
 
   @override

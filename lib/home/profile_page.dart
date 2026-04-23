@@ -1,8 +1,10 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:travelr/database/profile_model.dart';
 import 'package:travelr/database/profile_service.dart';
 import 'package:travelr/login/login.dart';
+import 'package:travelr/notifications/notification_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -31,7 +33,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _signOut(BuildContext context) async {
+    await NotificationService().unregisterFcmToken();
     await FirebaseAuth.instance.signOut();
+    if (!context.mounted) return;
+
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => LoginPage()),
       (route) => false,

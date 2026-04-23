@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:travelr/chat/chat_page.dart';
+import 'package:travelr/database/profile_service.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -11,6 +12,36 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  String getOtherUserId({
+    required String roomId,
+    required String currentUserId,
+  }) {
+    // dm_uid1_uid2
+    final parts = roomId.split('_');
+
+    if (parts.length != 3) {
+      throw Exception("Invalid roomId format: $roomId");
+    }
+
+    final uid1 = parts[1];
+    final uid2 = parts[2];
+
+    return uid1 == currentUserId ? uid2 : uid1;
+  }
+
+  Future<String> getChatDisplayName({
+    required String roomId,
+    required String currentUserId,
+  }) async {
+    final otherUid = getOtherUserId(
+      roomId: roomId,
+      currentUserId: currentUserId,
+    );
+
+    final profile = await ProfilesDatabase.getProfilePartialFromUID(otherUid);
+    return profile["name"] ?? "Unknown User";
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUserID = FirebaseAuth.instance.currentUser!.uid;
@@ -39,13 +70,16 @@ class _ChatScreenState extends State<ChatScreen> {
               final group = groups[index].data();
               final roomId = groups[index].id;
               final groupName = group['groupName'] ?? "Unnamed Group";
-              final lastMessage = group['lastMessage'];
-              final lastMessageTime = group['lastMessageTime']
-                  .toDate()
-                  .toLocal()
-                  .toString()
-                  .split(' ')[1]
-                  .substring(0, 5);
+              final lastMessage = group['lastMessage'] ?? "Start a chat...";
+              final Timestamp? ts = group['lastMessageTime'];
+              final String lastMessageTime = ts != null
+                  ? ts
+                      .toDate()
+                      .toLocal()
+                      .toString()
+                      .split(' ')[1]
+                      .substring(0, 5)
+                  : "";
 
               return Padding(
                 padding: const EdgeInsets.all(5.0),

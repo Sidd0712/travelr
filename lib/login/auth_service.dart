@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:travelr/database/profile_model.dart';
 import 'package:travelr/database/profile_service.dart';
 import 'package:travelr/home/main_fragment.dart';
+import 'package:travelr/notifications/notification_router.dart';
+import 'package:travelr/notifications/notification_service.dart';
 
 class AuthService {
   Future<void> signUp(
@@ -59,9 +61,15 @@ class AuthService {
             )),
       );
 
+      await NotificationService().init(
+        onForeground: NotificationRouter.handleForegroundNotification,
+        onTap: NotificationRouter.handleNotificationTap,
+      );
+
       navigator.pushReplacement(
         MaterialPageRoute(
-          builder: (BuildContext newContext) => const HomeScreen(),
+          builder: (BuildContext newContext) =>
+              const HomeScreen(parent: "Sign-Up"),
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -127,9 +135,15 @@ class AuthService {
             )),
       );
 
+      await NotificationService().init(
+        onForeground: NotificationRouter.handleForegroundNotification,
+        onTap: NotificationRouter.handleNotificationTap,
+      );
+
       navigator.pushReplacement(
         MaterialPageRoute(
-          builder: (BuildContext newContext) => const HomeScreen(),
+          builder: (BuildContext newContext) =>
+              const HomeScreen(parent: "Sign-In"),
         ),
       );
     } on FirebaseAuthException catch (e) {

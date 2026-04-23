@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -24,6 +24,7 @@ class _ChatPageState extends State<ChatPage> {
   String? _currentUserID;
   Map<String, String>? _members;
   final LiveTravelController _controller = LiveTravelController();
+  String? _groupName;
 
   @override
   void initState() {
@@ -31,26 +32,72 @@ class _ChatPageState extends State<ChatPage> {
     _initializeChatData();
   }
 
+  Future<String> getChatDisplayName({required String roomId}) async {
+    final name = await ChatService.getChatGroupName(roomId);
+    return name ?? "Unknown Group";
+  }
+
   Future<void> _initializeChatData() async {
     _currentUserID = FirebaseAuth.instance.currentUser?.uid ?? '';
     _members = await ChatService.getMemberProfiles(widget.roomID);
-    setState(() {});
+
+    final name = await getChatDisplayName(roomId: widget.roomID);
+
+    if (!mounted) return;
+
+    setState(() {
+      _groupName = name;
+    });
   }
 
   void sendMessage() async {
-    if (_messagesController.text.isNotEmpty) {
-      await ChatService.sendMessage(widget.roomID, _messagesController.text);
+    final text = _messagesController.text.trim();
+    if (text.isEmpty) return;
 
-      _messagesController.clear();
+    _messagesController.clear();
 
-      Future.delayed(Duration(milliseconds: 100), () {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      });
-    }
+    await ChatService.sendMessage(widget.roomID, text);
+
+    _sendChatNotification(text);
+
+    Future.delayed(Duration(milliseconds: 100), () {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  Future<void> _sendChatNotification(String message) async {
+    if (_members == null || _currentUserID == null) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final uri = Uri.parse(
+      'https://travelr-ml.onrender.com/chat/send',
+    );
+
+    final idToken = await user.getIdToken();
+
+    var response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $idToken',
+      },
+      body: jsonEncode({
+        'room_id': widget.roomID,
+        'members': _members!.keys.toList(),
+        'message': message,
+        'sender_uid': _currentUserID,
+        'sender_name': _members![_currentUserID],
+        'group_name': _groupName!
+      }),
+    );
+
+    log(response.body);
   }
 
   @override
@@ -60,7 +107,7 @@ class _ChatPageState extends State<ChatPage> {
         title: Column(children: [
           const SizedBox(height: 20),
           Text(
-            widget.groupName,
+            _groupName ?? widget.groupName,
             style: const TextStyle(
                 fontSize: 25, color: Colors.black, fontWeight: FontWeight.w500),
           ),
@@ -84,31 +131,39 @@ class _ChatPageState extends State<ChatPage> {
                   debugPrint("Calling API...");
                   final uri = Uri.https(
                     'travelr-ml.onrender.com',
-                    '/trip',
-                    {
-                      'user1_id': _currentUserID!,
-                      'user2_id': _members!.keys.first,
-                    },
+                    '/trip/${widget.roomID}',
                   );
 
                   try {
-                    final response = await http.get(uri);
+                    final idToken =
+                        await FirebaseAuth.instance.currentUser!.getIdToken();
+
+                    final response = await http.get(
+                      uri,
+                      headers: {
+                        'Authorization': 'Bearer $idToken',
+                      },
+                    );
+
                     debugPrint("Recieved Output");
 
                     if (response.statusCode != 200) {
-                      debugPrint("Trip API failed: ${response.statusCode}");
+                      debugPrint("Trip API failed: ${response.body}");
                       return;
                     }
 
                     final data = json.decode(response.body);
+                    log(jsonEncode(data));
 
                     debugPrint("Starting Controller");
+                    final session = await LiveTravelSession.fromTripApi(data);
+
                     _controller.start(
                       roomId: widget.roomID,
                       userId: _currentUserID!,
-                      initialSession: LiveTravelSession.test(
-                          widget.roomID, widget.groupName),
+                      initialSession: session,
                     );
+
                     debugPrint("Controller Started");
                   } catch (e) {
                     debugPrint("Trip start failed: $e");
@@ -122,27 +177,29 @@ class _ChatPageState extends State<ChatPage> {
           const SizedBox(width: 16),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15.0),
-        child: Column(
-          children: [
-            AnimatedBuilder(
-                animation: _controller,
-                builder: (_, __) {
-                  final session = _controller.session;
-                  if (session == null) return const SizedBox.shrink();
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15.0),
+          child: Column(
+            children: [
+              AnimatedBuilder(
+                  animation: _controller,
+                  builder: (_, __) {
+                    final session = _controller.session;
+                    if (session == null) return const SizedBox.shrink();
 
-                  return LiveTravelPane(
-                    session: session,
-                    currentUserId: _currentUserID!,
-                  );
-                }),
-            Expanded(
-              child: _buildMessagesList(),
-            ),
-            const SizedBox(height: 20),
-            _userInput(),
-          ],
+                    return LiveTravelPane(
+                      session: session,
+                      currentUserId: _currentUserID!,
+                    );
+                  }),
+              Expanded(
+                child: _buildMessagesList(),
+              ),
+              const SizedBox(height: 20),
+              _userInput(),
+            ],
+          ),
         ),
       ),
     );
@@ -184,7 +241,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildMessageItem(Message data) {
     bool isSent = data.senderID == _currentUserID;
     String message = data.message;
-    print(data.timestamp.toDate().toLocal().toString());
+    // print(data.timestamp.toDate().toLocal().toString());
 
     return Align(
       alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
