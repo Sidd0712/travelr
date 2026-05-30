@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:travelr/friends/friends_service.dart';
 import 'package:travelr/recommender/recommendation_model.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 
 class RecommenderCarousel extends StatefulWidget {
   final List<Recommendation> recommendations;
@@ -37,7 +39,7 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor:
-          const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.25),
+          const Color.fromARGB(255, 0, 0, 0).withOpacity(0.25),
     ));
     if (_recommendations.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -63,8 +65,7 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
-                  color: const Color.fromARGB(255, 0, 0, 0)
-                      .withValues(alpha: 0.25),
+                  color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.25),
                 ),
               ),
             ),
@@ -102,6 +103,7 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                             recommendation: _recommendations[index],
                             allowTransportModes: allowTransportModes,
                             allowPhoneNumber: isFriend,
+                            isActive: index == currentIndex,
                           ),
                         );
                       },
@@ -165,9 +167,9 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                             }
                           },
                     style: const ButtonStyle(
-                      fixedSize: WidgetStatePropertyAll(Size(200, 50)),
-                      backgroundColor: WidgetStatePropertyAll(Colors.blue),
-                      shape: WidgetStatePropertyAll(
+                      fixedSize: MaterialStatePropertyAll(Size(200, 50)),
+                      backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                      shape: MaterialStatePropertyAll(
                         RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(10)),
                         ),
@@ -196,12 +198,14 @@ class RecommendationCard extends StatefulWidget {
   final Recommendation recommendation;
   final bool allowTransportModes;
   final bool allowPhoneNumber;
+  final bool isActive;
 
   const RecommendationCard({
     super.key,
     required this.recommendation,
     required this.allowTransportModes,
     required this.allowPhoneNumber,
+    required this.isActive,
   });
 
   @override
@@ -210,6 +214,19 @@ class RecommendationCard extends StatefulWidget {
 
 class _RecommendationCardState extends State<RecommendationCard> {
   bool showDetails = false;
+  GoogleMapController? _mapController;
+
+  List<LatLng> _decodePolyline(String encoded) {
+    final decoded = PolylinePoints().decodePolyline(encoded);
+    return decoded.map((p) => LatLng(p.latitude, p.longitude)).toList();
+  }
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
+  }
+
   void _toggleDetails() {
     setState(() {
       showDetails = !showDetails;
@@ -229,6 +246,69 @@ class _RecommendationCardState extends State<RecommendationCard> {
     }
   }
 
+  // Add this helper to _RecommendationCardState
+  int _nearestIndex(List<LatLng> points, LatLng target) {
+    int best = 0;
+    double bestDist = double.infinity;
+    for (int i = 0; i < points.length; i++) {
+      final dLat = points[i].latitude - target.latitude;
+      final dLng = points[i].longitude - target.longitude;
+      final dist = dLat * dLat + dLng * dLng;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  void _animateToRoute() {
+    final controller = _mapController;
+    if (controller == null) return;
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      final boundsPoints = _decodePolyline(widget.recommendation.polyline);
+
+      final minLat =
+          boundsPoints.map((p) => p.latitude).reduce((a, b) => a < b ? a : b);
+      final maxLat =
+          boundsPoints.map((p) => p.latitude).reduce((a, b) => a > b ? a : b);
+      final minLng =
+          boundsPoints.map((p) => p.longitude).reduce((a, b) => a < b ? a : b);
+      final maxLng =
+          boundsPoints.map((p) => p.longitude).reduce((a, b) => a > b ? a : b);
+
+      final hasArea =
+          (maxLat - minLat).abs() > 0.0001 || (maxLng - minLng).abs() > 0.0001;
+
+      if (hasArea) {
+        controller.animateCamera(
+          CameraUpdate.newLatLngBounds(
+            LatLngBounds(
+              southwest: LatLng(minLat, minLng),
+              northeast: LatLng(maxLat, maxLng),
+            ),
+            48,
+          ),
+        );
+      } else {
+        controller.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(target: boundsPoints.first, zoom: 15),
+          ),
+        );
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(RecommendationCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.isActive && widget.isActive) {
+      _animateToRoute();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -237,302 +317,359 @@ class _RecommendationCardState extends State<RecommendationCard> {
         color: const Color(0xFF111111),
         borderRadius: BorderRadius.circular(22),
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Map placeholder
-            Container(
-              height: 160,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 255, 255, 255),
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Builder(builder: (context) {
+            final polyline = widget.recommendation.polyline;
+            if (polyline.isEmpty) {
+              return Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: const Center(
+                    child: Text("No route available",
+                        style: TextStyle(color: Colors.black54)),
+                  ),
+                ),
+              );
+            }
+
+            final points = _decodePolyline(polyline);
+            if (points.isEmpty) return const SizedBox(height: 160);
+
+            final meetPoint = LatLng(widget.recommendation.meetPoint[0],
+                widget.recommendation.meetPoint[1]);
+            final splitPoint = LatLng(widget.recommendation.splitPoint[0],
+                widget.recommendation.splitPoint[1]);
+
+            final startIndex = _nearestIndex(points, meetPoint);
+            final endIndex = _nearestIndex(points, splitPoint);
+
+            final commonPoints = startIndex <= endIndex
+                ? points.sublist(startIndex, endIndex + 1)
+                : points.sublist(endIndex, startIndex + 1);
+
+            final polylineSet = {
+              Polyline(
+                polylineId: const PolylineId('user_route'),
+                points: points,
+                width: 6,
+                color: Colors.grey,
+                zIndex: 1,
+                startCap: Cap.roundCap,
+                endCap: Cap.roundCap,
+              ),
+              Polyline(
+                polylineId: const PolylineId('common_route'),
+                points: commonPoints,
+                width: 6,
+                color: Colors.blue,
+                zIndex: 2,
+                startCap: Cap.roundCap,
+                endCap: Cap.roundCap,
+              ),
+            };
+
+            final markers = {
+              Marker(
+                markerId: const MarkerId('Meet'),
+                position: points.first,
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueGreen),
+              ),
+              Marker(
+                markerId: const MarkerId('Split'),
+                position: points.last,
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueRed),
+              ),
+            };
+
+            return Expanded(
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(22),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                  BoxShadow(
-                    color: const Color.fromARGB(255, 0, 0, 0)
-                        .withValues(alpha: 0.25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Opacity(
-                      opacity: 0.08,
-                      child: Icon(
-                        Icons.map,
-                        size: 140,
-                        color: Colors.black,
-                      ),
+                child: AbsorbPointer(
+                  child: GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: points[points.length ~/ 2],
+                      zoom: 12,
                     ),
+                    onMapCreated: (controller) {
+                      _mapController = controller;
+                      if (widget.isActive) _animateToRoute();
+                    },
+                    polylines: polylineSet,
+                    markers: markers,
+                    zoomControlsEnabled: false,
+                    mapToolbarEnabled: false,
+                    myLocationEnabled: false,
+                    myLocationButtonEnabled: false,
+                    rotateGesturesEnabled: false,
+                    tiltGesturesEnabled: false,
+                    compassEnabled: false,
+                    scrollGesturesEnabled: false,
+                    style: '''
+                  [
+                    { "elementType": "labels", "stylers": [{ "visibility": "off" }] },
+                    { "featureType": "poi", "stylers": [{ "visibility": "off" }] },
+                    { "featureType": "transit", "stylers": [{ "visibility": "off" }] },
+                    { "featureType": "road", "elementType": "labels", "stylers": [{ "visibility": "off" }] }
+                  ]
+                  ''',
                   ),
-
-                  // Center label
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(
-                          Icons.location_on,
-                          color: Colors.blue,
-                          size: 28,
-                        ),
-                        SizedBox(height: 6),
-                        Text(
-                          "Route Preview",
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-            Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: Colors.grey.shade300,
-
-                    // When you have an image URL later, this line will activate
-                    // backgroundImage: NetworkImage(widget.recommendation.profileImageUrl),
-
-                    child: const Text(
-                      "DP",
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Name + gender/age
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        widget.recommendation.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        "${widget.recommendation.gender}  ${widget.recommendation.age}",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 6),
-
-            if (widget.allowPhoneNumber &&
-                widget.recommendation.phoneNumber != null)
-              Text(
-                widget.recommendation.phoneNumber!,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
                 ),
               ),
-            const SizedBox(height: 16),
-            // Overlap pill + progress bar
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      LinearProgressIndicator(
-                        value: widget.recommendation.overlapPercent,
-                        minHeight: 36, // pill height
-                        backgroundColor: Colors.green.withValues(alpha: 0.25),
-                        valueColor:
-                            const AlwaysStoppedAnimation<Color>(Colors.green),
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                      ),
-                      Text(
-                        "Shared Route : ${widget.recommendation.overlapDist.toStringAsFixed(1)} km",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (widget.allowTransportModes)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: widget.recommendation.segments!.map((segment) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Icon(
-                      _iconForMode(segment.mode),
-                      size: 20,
-                      color: Colors.white70,
-                    ),
-                  );
-                }).toList(),
-              ),
+            );
+          }),
 
-            const SizedBox(height: 12),
-            // Meet / Split
-            Text(
-              "Meet: ${widget.recommendation.meetPoint}",
-              style: const TextStyle(color: Colors.white60, fontSize: 12),
-            ),
-            Text(
-              "Split: ${widget.recommendation.splitPoint}",
-              style: const TextStyle(color: Colors.white60, fontSize: 12),
-            ),
+          const SizedBox(height: 16),
+          Row(
+            //mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: Colors.grey.shade300,
 
-            const SizedBox(height: 12),
-            if (widget.recommendation.canShowETA &&
-                widget.recommendation.etaAtMeetPoint != null)
-              Text(
-                "ETA at meet point: ${widget.recommendation.etaAtMeetPoint!.format(context)}",
-                style: const TextStyle(
-                  color: Colors.white60,
-                  fontSize: 12,
-                ),
-              ),
-            const SizedBox(height: 12),
-            // COLLAPSED STATE → View Details
-            if (!showDetails && widget.allowTransportModes)
-              TextButton(
-                onPressed: _toggleDetails,
-                style: const ButtonStyle(
-                  overlayColor: WidgetStatePropertyAll(Colors.transparent),
-                  padding: WidgetStatePropertyAll(
-                    EdgeInsets.symmetric(vertical: 6),
-                  ),
-                ),
+                // When you have an image URL later, this line will activate
+                // backgroundImage: NetworkImage(widget.recommendation.profileImageUrl),
+
                 child: const Text(
-                  "View Details",
+                  "DP",
                   style: TextStyle(
-                    color: Colors.blue,
-                    fontSize: 14,
+                    color: Colors.black87,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-
-            //         if (widget.allowTransportModes)
-            // TextButton(
-            //   onPressed: _toggleDetails,
-            //   style: const ButtonStyle(
-            //     overlayColor: WidgetStatePropertyAll(Colors.transparent),
-            //     padding: WidgetStatePropertyAll(
-            //       EdgeInsets.symmetric(vertical: 6),
-            //     ),
-            //   ),
-            //   child: Text(
-            //     showDetails ? "Hide Details" : "View Details",
-            //     style: const TextStyle(
-            //       color: Colors.blue,
-            //       fontSize: 14,
-            //       fontWeight: FontWeight.w500,
-            //     ),
-            //   ),
-            // ),
-
-            if (showDetails && widget.allowTransportModes)
+              const SizedBox(width: 12),
+              // Name + gender/age
               Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 140,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children:
-                            widget.recommendation.segments!.map((segment) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  _iconForMode(segment.mode),
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    "${segment.mode}: ${segment.from} → ${segment.to}",
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                                Text(
-                                  "${segment.startTime.format(context)} - ${segment.endTime.format(context)}",
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ),
+                  Text(
+                    widget.recommendation.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: _toggleDetails,
-                    style: const ButtonStyle(
-                      overlayColor: WidgetStatePropertyAll(Colors.transparent),
-                      padding: WidgetStatePropertyAll(
-                        EdgeInsets.symmetric(vertical: 6),
-                      ),
-                    ),
-                    child: const Text(
-                      "Hide Details",
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  const SizedBox(height: 2),
+                  Text(
+                    "${widget.recommendation.gender}  ${widget.recommendation.age}",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
-          ],
-        ),
+            ],
+          ),
+
+          if (widget.allowPhoneNumber &&
+              widget.recommendation.phoneNumber != null)
+            Row(
+              children: [
+                const SizedBox(height: 6),
+                Text(
+                  widget.recommendation.phoneNumber!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: 16),
+          // Overlap pill + progress bar
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    LinearProgressIndicator(
+                      value: widget.recommendation.overlapPercent,
+                      minHeight: 36, // pill height
+                      backgroundColor: Colors.green.withOpacity(0.25),
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(Colors.green),
+                    ),
+                    Text(
+                      "Shared Route : ${widget.recommendation.overlapDist.toStringAsFixed(1)} km",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (widget.allowTransportModes)
+            Row(
+              children: [
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: widget.recommendation.segments!.map((segment) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Icon(
+                        _iconForMode(segment.mode),
+                        size: 20,
+                        color: Colors.white70,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+
+          // -- Temporary Meet Split Code --
+          // const SizedBox(height: 12),
+          // // Meet / Split
+          // Text(
+          //   "Meet: ${widget.recommendation.meetPoint}",
+          //   style: const TextStyle(color: Colors.white60, fontSize: 12),
+          // ),
+          // Text(
+          //   "Split: ${widget.recommendation.splitPoint}",
+          //   style: const TextStyle(color: Colors.white60, fontSize: 12),
+          // ),
+
+          if (widget.recommendation.canShowETA &&
+              widget.recommendation.etaAtMeetPoint != null)
+            Row(
+              children: [
+                const SizedBox(height: 12),
+                Text(
+                  "ETA at meet point: ${widget.recommendation.etaAtMeetPoint!.format(context)}",
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          // COLLAPSED STATE → View Details
+          if (!showDetails && widget.allowTransportModes)
+            Row(
+              children: [
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: _toggleDetails,
+                  style: const ButtonStyle(
+                    overlayColor: MaterialStatePropertyAll(Colors.transparent),
+                    padding: MaterialStatePropertyAll(
+                      EdgeInsets.symmetric(vertical: 6),
+                    ),
+                  ),
+                  child: const Text(
+                    "View Details",
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+          //         if (widget.allowTransportModes)
+          // TextButton(
+          //   onPressed: _toggleDetails,
+          //   style: const ButtonStyle(
+          //     overlayColor: WidgetStatePropertyAll(Colors.transparent),
+          //     padding: WidgetStatePropertyAll(
+          //       EdgeInsets.symmetric(vertical: 6),
+          //     ),
+          //   ),
+          //   child: Text(
+          //     showDetails ? "Hide Details" : "View Details",
+          //     style: const TextStyle(
+          //       color: Colors.blue,
+          //       fontSize: 14,
+          //       fontWeight: FontWeight.w500,
+          //     ),
+          //   ),
+          // ),
+
+          if (showDetails && widget.allowTransportModes)
+            Column(
+              children: [
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 140,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: widget.recommendation.segments!.map((segment) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _iconForMode(segment.mode),
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  "${segment.mode}: ${segment.from} → ${segment.to}",
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              Text(
+                                "${segment.startTime.format(context)} - ${segment.endTime.format(context)}",
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: _toggleDetails,
+                  style: const ButtonStyle(
+                    overlayColor: MaterialStatePropertyAll(Colors.transparent),
+                    padding: MaterialStatePropertyAll(
+                      EdgeInsets.symmetric(vertical: 6),
+                    ),
+                  ),
+                  child: const Text(
+                    "Hide Details",
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }
