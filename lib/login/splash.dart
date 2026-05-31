@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging_platform_interface/src/remote_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:travelr/home/main_fragment.dart';
@@ -53,20 +52,23 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
       // Change to match your app background
       //systemNavigationBarIconBrightness: Brightness.dark, // Change icon color if needed
     ));
 
-    return const Scaffold(
+    return Scaffold(
       body: Center(
         child: Text(
           "travelr",
-          style: TextStyle(
-            fontFamily: "Northlane",
+          style: textTheme.displayLarge?.copyWith(
             fontSize: 52,
-            color: Colors.black,
+            color: colorScheme.primary,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),

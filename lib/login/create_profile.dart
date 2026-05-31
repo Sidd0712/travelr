@@ -66,21 +66,23 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
     ));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
+        title: Column(
           children: [
-            SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(
               "travelr",
-              style: TextStyle(
-                fontFamily: "Northlane",
-                fontSize: 38,
-                color: Colors.black,
+              style: textTheme.headlineMedium?.copyWith(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ],
@@ -98,47 +100,45 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       ),
       body: Padding(
         padding:
-            const EdgeInsets.only(left: 30, right: 30, top: 15, bottom: 15),
+            const EdgeInsets.only(left: 32, right: 32, top: 16, bottom: 16),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "Create Profile",
-                style: TextStyle(
-                  fontSize: 30,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
+                style: textTheme.headlineMedium?.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               nameField(),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               phoneField(),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               locationField(_startingLocationController, "Starting Location"),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               locationField(_endingLocationController, "Ending Location"),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               genderField(),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               genderPreferenceField(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               TextButton(
                 onPressed: _signUp,
                 style: TextButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  backgroundColor: Colors.blue,
+                  minimumSize: const Size(double.infinity, 48),
+                  backgroundColor: colorScheme.primary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   "Sign-Up",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  style: textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onPrimary,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -150,21 +150,28 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   }
 
   Widget genderField() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Select Gender",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Text(
+          "Select Gender",
+          style: textTheme.titleMedium?.copyWith(
+            color: colorScheme.onSurface,
+          ),
+        ),
         Column(
           children: ["Male", "Female"].map((gender) {
             return RadioListTile<String>(
               title: Text(
                 gender,
-                style: TextStyle(fontSize: 16), // Keep text size consistent
+                style: textTheme.bodyLarge,
               ),
               value: gender,
               groupValue: _selectedGender,
-              activeColor: Colors.blue,
+              activeColor: colorScheme.primary,
               dense: true,
               visualDensity: VisualDensity.compact,
               onChanged: (value) {
@@ -178,21 +185,28 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   }
 
   Widget genderPreferenceField() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Select Companion Gender Preference",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Text(
+          "Select Companion Gender Preference",
+          style: textTheme.titleMedium?.copyWith(
+            color: colorScheme.onSurface,
+          ),
+        ),
         Column(
           children: ["Male", "Female", "Both"].map((gender) {
             return RadioListTile<String>(
               title: Text(
                 gender,
-                style: TextStyle(fontSize: 16),
+                style: textTheme.bodyLarge,
               ),
               value: gender,
               groupValue: _selectedGenderPreference,
-              activeColor: Colors.blue,
+              activeColor: colorScheme.primary,
               dense: true,
               visualDensity: VisualDensity.compact,
               onChanged: (value) {
@@ -223,55 +237,41 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   }
 
   TextFormField phoneField() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return TextFormField(
       controller: _phoneController,
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       maxLength: 10,
-      decoration: const InputDecoration(
-        filled: true,
+      cursorColor: colorScheme.primary,
+      decoration: InputDecoration(
         hintText: "Phone Number",
         counterText: "",
-        contentPadding: EdgeInsets.all(15),
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
         prefixIcon: Padding(
-          padding: EdgeInsets.only(left: 15),
+          padding: const EdgeInsets.only(left: 16),
           child: Text(
             "+91",
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 16,
+            style: textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurface,
               fontWeight: FontWeight.w500,
             ),
           ),
         ),
-        prefixIconConstraints: BoxConstraints(minWidth: 30),
+        prefixIconConstraints: const BoxConstraints(minWidth: 32),
       ),
     );
   }
 
   TextFormField nameField() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return TextFormField(
       controller: _nameController,
+      cursorColor: colorScheme.primary,
       decoration: const InputDecoration(
-        filled: true,
         hintText: "Name",
-        contentPadding: EdgeInsets.all(15),
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
       ),
     );
   }

@@ -104,6 +104,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
     ));
@@ -118,13 +121,15 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("travelr",
-            style: TextStyle(
-                fontFamily: "Northlane", fontSize: 38, color: Colors.black)),
+            style: textTheme.headlineMedium?.copyWith(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w800,
+            )),
         centerTitle: true,
         leading: SizedBox(),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit_rounded, color: Colors.black),
+            icon: Icon(Icons.edit_outlined, color: colorScheme.onSurface),
             onPressed: () {
               Navigator.push(
                 context,
@@ -141,12 +146,16 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: _selectedIndex == 1
           ? FloatingActionButton(
               shape: CircleBorder(),
-              backgroundColor: Colors.blue,
+              backgroundColor: colorScheme.primary,
               onPressed: () {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (context) => CreateChatPage()));
               },
-              child: Icon(Icons.add_rounded, color: Colors.white, size: 36))
+              child: Icon(
+                Icons.add_rounded,
+                color: colorScheme.onPrimary,
+                size: 36,
+              ))
           : null,
       body: IndexedStack(
         index: _selectedIndex,
@@ -155,14 +164,17 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.group_add), label: 'Friends'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+              icon: Icon(Icons.home_outlined), label: 'Home'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.group_add_outlined), label: 'Friends'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline), label: 'Profile'),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue,
+        selectedItemColor: colorScheme.primary,
         onTap: _onItemTapped,
       ),
     );

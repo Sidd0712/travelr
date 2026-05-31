@@ -82,6 +82,9 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
     ));
@@ -96,43 +99,45 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "Update Profile",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: textTheme.headlineMedium?.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               nameField(),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               phoneField(),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               locationField(_startingLocationController, "Starting Location"),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               locationField(_endingLocationController, "Ending Location"),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               genderField(),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               genderPreferenceField(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               TextButton(
                 onPressed: _updateProfile,
                 style: TextButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  backgroundColor: Colors.blue,
+                  minimumSize: const Size(double.infinity, 48),
+                  backgroundColor: colorScheme.primary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   "Save Changes",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  style: textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onPrimary,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -161,12 +166,17 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   }
 
   Widget genderField() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           "Select Gender",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: textTheme.titleMedium?.copyWith(
+            color: colorScheme.onSurface,
+          ),
         ),
         RadioGroup<String>(
           groupValue: _selectedGender,
@@ -176,8 +186,9 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
           child: Column(
             children: ["Male", "Female"].map((gender) {
               return RadioListTile<String>(
-                title: Text(gender),
+                title: Text(gender, style: textTheme.bodyLarge),
                 value: gender,
+                activeColor: colorScheme.primary,
               );
             }).toList(),
           ),
@@ -187,12 +198,17 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   }
 
   Widget genderPreferenceField() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           "Companion Gender Preference",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: textTheme.titleMedium?.copyWith(
+            color: colorScheme.onSurface,
+          ),
         ),
         RadioGroup<String>(
           groupValue: _selectedGenderPreference,
@@ -202,8 +218,9 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
           child: Column(
             children: ["Male", "Female", "Both"].map((gender) {
               return RadioListTile<String>(
-                title: Text(gender),
+                title: Text(gender, style: textTheme.bodyLarge),
                 value: gender,
+                activeColor: colorScheme.primary,
               );
             }).toList(),
           ),
@@ -213,55 +230,41 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   }
 
   TextFormField phoneField() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return TextFormField(
       controller: _phoneController,
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       maxLength: 10,
-      decoration: const InputDecoration(
-        filled: true,
+      cursorColor: colorScheme.primary,
+      decoration: InputDecoration(
         hintText: "Phone Number",
         counterText: "",
-        contentPadding: EdgeInsets.all(15),
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
         prefixIcon: Padding(
-          padding: EdgeInsets.only(left: 15),
+          padding: const EdgeInsets.only(left: 16),
           child: Text(
             "+91",
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 16,
+            style: textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurface,
               fontWeight: FontWeight.w500,
             ),
           ),
         ),
-        prefixIconConstraints: BoxConstraints(minWidth: 30),
+        prefixIconConstraints: const BoxConstraints(minWidth: 32),
       ),
     );
   }
 
   TextFormField nameField() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return TextFormField(
       controller: _nameController,
+      cursorColor: colorScheme.primary,
       decoration: const InputDecoration(
-        filled: true,
         hintText: "Name",
-        contentPadding: EdgeInsets.all(15),
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
       ),
     );
   }

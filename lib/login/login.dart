@@ -99,6 +99,9 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
       // Change to match your app background
@@ -107,14 +110,14 @@ class _LoginPageState extends State<LoginPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Column(children: [
-          SizedBox(
-            height: 20,
-          ),
+        title: Column(children: [
+          const SizedBox(height: 16),
           Text(
             "travelr",
-            style: TextStyle(
-                fontFamily: "Northlane", fontSize: 38, color: Colors.black),
+            style: textTheme.headlineMedium?.copyWith(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ]),
         centerTitle: true,
@@ -124,15 +127,15 @@ class _LoginPageState extends State<LoginPage>
         child: Form(
           key: _formKey,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _labelText(),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 _emailField(),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 _passwordField(),
                 _confirmPasswordField(),
                 const SizedBox(height: 8),
@@ -143,7 +146,9 @@ class _LoginPageState extends State<LoginPage>
                       _isSignUp
                           ? "Already have an account?"
                           : "Don't have an account?",
-                      style: const TextStyle(color: Colors.black, fontSize: 16),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     _toggleBtn()
                   ],
@@ -157,57 +162,59 @@ class _LoginPageState extends State<LoginPage>
   }
 
   TextFormField _emailField() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return TextFormField(
-      cursorColor: Colors.black,
+      cursorColor: colorScheme.primary,
       controller: _emailController,
       validator: _validateEmail,
       decoration: const InputDecoration(
-        filled: true,
         hintText: "Email-ID",
-        contentPadding: EdgeInsets.all(15),
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide()),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
       ),
     );
   }
 
   TextButton _toggleBtn() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return TextButton(
       onPressed: _toggleSignUp,
-      style: const ButtonStyle(
-          overlayColor: WidgetStatePropertyAll(Colors.transparent),
-          padding: WidgetStatePropertyAll(EdgeInsets.fromLTRB(5, 0, 0, 0))),
+      style: ButtonStyle(
+          overlayColor: WidgetStatePropertyAll(
+            colorScheme.primary.withValues(alpha: 0.08),
+          ),
+          padding: const WidgetStatePropertyAll(EdgeInsets.only(left: 8))),
       child: Text(
         _isSignUp ? "Sign-In" : "Sign-Up",
-        style: const TextStyle(
-            color: Colors.blue,
-            //fontWeight: FontWeight.bold,
-            fontSize: 16),
+        style: textTheme.labelLarge?.copyWith(
+          color: colorScheme.primary,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
 
   TextButton _btnConfirm() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return TextButton(
       onPressed: _signIn,
-      style: const ButtonStyle(
-        fixedSize: WidgetStatePropertyAll(Size(double.infinity, 50)),
-        padding: WidgetStatePropertyAll(EdgeInsets.zero),
-        backgroundColor: WidgetStatePropertyAll(Colors.blue),
-        shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)))),
+      style: ButtonStyle(
+        fixedSize: const WidgetStatePropertyAll(Size(double.infinity, 48)),
+        padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+        backgroundColor: WidgetStatePropertyAll(colorScheme.primary),
+        shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
       ),
       child: Center(
         child: Text(
           _isSignUp ? "Continue" : "Sign-In",
-          style: const TextStyle(
-              color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          style: textTheme.labelLarge?.copyWith(
+            color: colorScheme.onPrimary,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
     );
@@ -216,28 +223,19 @@ class _LoginPageState extends State<LoginPage>
   AnimatedContainer _confirmPasswordField() {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      height: _isSignUp ? 65 : 0,
+      height: _isSignUp ? 64 : 0,
       curve: Curves.easeInOut,
       child: _isSignUp
           ? Padding(
-              padding: const EdgeInsets.only(top: 10),
+              padding: const EdgeInsets.only(top: 8),
               child: TextFormField(
-                cursorColor: Colors.black,
+                cursorColor: Theme.of(context).colorScheme.primary,
                 controller: _confirmPasswordController,
                 validator: (value) =>
                     _validateConfirmPassword(value, _passwordController.text),
                 obscureText: _obscureText,
                 decoration: const InputDecoration(
-                  filled: true,
                   hintText: "Confirm Password",
-                  contentPadding: EdgeInsets.all(15),
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10))),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blue, width: 2),
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
                 ),
               ),
             )
@@ -246,40 +244,41 @@ class _LoginPageState extends State<LoginPage>
   }
 
   TextFormField _passwordField() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return TextFormField(
-      cursorColor: Colors.black,
+      cursorColor: colorScheme.primary,
       controller: _passwordController,
       validator: _validatePassword,
       obscureText: _obscureText,
       decoration: InputDecoration(
         suffixIcon: Padding(
-          padding: const EdgeInsets.all(5),
+          padding: const EdgeInsets.all(8),
           child: IconButton(
-            icon:
-                Icon((_obscureText ? Icons.visibility_off : Icons.visibility)),
+            icon: Icon(
+              _obscureText
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
+              color: colorScheme.onSurfaceVariant,
+            ),
             onPressed: _toggleVisibility,
           ),
         ),
-        filled: true,
         hintText: "Password",
-        contentPadding: const EdgeInsets.all(15),
-        fillColor: Colors.white,
-        border: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide()),
-        focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.circular(10),
-        ),
       ),
     );
   }
 
   Text _labelText() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Text(
       _isSignUp ? "Sign-Up" : "Sign-In",
-      style: const TextStyle(
-          fontSize: 30, color: Colors.black, fontWeight: FontWeight.bold),
+      style: textTheme.headlineMedium?.copyWith(
+        color: colorScheme.onSurface,
+        fontWeight: FontWeight.w800,
+      ),
     );
   }
 }

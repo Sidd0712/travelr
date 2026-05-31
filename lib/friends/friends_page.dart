@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:travelr/database/profile_model.dart';
 import 'package:travelr/database/profile_service.dart';
 import 'package:travelr/friends/friends_service.dart';
 
@@ -24,15 +23,20 @@ class _FriendsPageState extends State<FriendsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Text(
               "Friend Suggestions",
-              style: Theme.of(context).textTheme.titleLarge,
+              style: textTheme.titleLarge?.copyWith(
+                color: colorScheme.onSurface,
+              ),
             ),
           ),
           SizedBox(
@@ -47,17 +51,26 @@ class _FriendsPageState extends State<FriendsPage> {
               },
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Text(
               "Friend Requests",
-              style: Theme.of(context).textTheme.titleLarge,
+              style: textTheme.titleLarge?.copyWith(
+                color: colorScheme.onSurface,
+              ),
             ),
           ),
           Expanded(
             child: friendRequests.isEmpty
-                ? const Center(child: Text("No friend requests yet"))
+                ? Center(
+                    child: Text(
+                      "No friend requests yet",
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: friendRequests.length,
@@ -74,38 +87,50 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   Widget _buildSuggestionCard(String uid, String name) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
       width: 160,
       margin: const EdgeInsets.only(left: 16, bottom: 8),
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 4,
+        elevation: 1,
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircleAvatar(
                 radius: 40,
-                backgroundColor: Colors.blue.shade300,
+                backgroundColor: colorScheme.primaryContainer,
                 child: Text(
                   name[0].toUpperCase(),
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold),
+                  style: textTheme.headlineMedium?.copyWith(
+                    color: colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Text(name,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w600)),
+                  style: textTheme.titleMedium?.copyWith(
+                    color: colorScheme.onSurface,
+                  )),
               const SizedBox(height: 8),
               ElevatedButton.icon(
-                icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
-                label: const Text("Add", style: TextStyle(color: Colors.white)),
+                icon: Icon(
+                  Icons.person_add_alt_1_outlined,
+                  color: colorScheme.onPrimary,
+                ),
+                label: Text(
+                  "Add",
+                  style: textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onPrimary,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: colorScheme.primary,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
@@ -127,25 +152,31 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   Widget _buildRequestCard(String uid, String name) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 3,
+      elevation: 1,
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: Colors.blue.shade400,
+          backgroundColor: colorScheme.secondaryContainer,
           child: Text(
             name[0].toUpperCase(),
-            style: const TextStyle(color: Colors.white, fontSize: 20),
+            style: textTheme.titleMedium?.copyWith(
+              color: colorScheme.onSecondaryContainer,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
-        title: Text(name, style: const TextStyle(fontSize: 18)),
+        title: Text(name, style: textTheme.titleMedium),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.close, color: Colors.red),
+              icon: Icon(Icons.close_rounded, color: colorScheme.error),
               onPressed: () async {
                 // TODO: Add remove logic here
                 setState(() {
@@ -154,7 +185,7 @@ class _FriendsPageState extends State<FriendsPage> {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.check, color: Colors.green),
+              icon: Icon(Icons.check_rounded, color: colorScheme.primary),
               onPressed: () async {
                 await FriendsService.acceptFriendRequest(uid);
                 setState(() {

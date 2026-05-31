@@ -37,9 +37,11 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      systemNavigationBarColor:
-          const Color.fromARGB(255, 0, 0, 0).withOpacity(0.25),
+      systemNavigationBarColor: colorScheme.scrim.withValues(alpha: 0.25),
     ));
     if (_recommendations.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -55,7 +57,7 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
     print("Recommendations count: ${_recommendations.length}");
 
     return Material(
-      color: Colors.transparent,
+      color: colorScheme.scrim.withValues(alpha: 0),
       child: Stack(
         children: [
           // Blur + Dim Background
@@ -65,7 +67,7 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
-                  color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.25),
+                  color: colorScheme.scrim.withValues(alpha: 0.32),
                 ),
               ),
             ),
@@ -74,19 +76,18 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
           // Overlay Body
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  const SizedBox(height: 20),
-                  const Text(
+                  const SizedBox(height: 24),
+                  Text(
                     "Travel Buddies Found",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
+                    style: textTheme.titleLarge?.copyWith(
+                      color: colorScheme.onInverseSurface,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   Expanded(
                     child: PageView.builder(
                       itemCount: _recommendations.length,
@@ -109,7 +110,7 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   Row(
                     //page indicator
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -122,14 +123,14 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                         height: 6,
                         decoration: BoxDecoration(
                           color: currentIndex == index
-                              ? Colors.white
-                              : const Color.fromARGB(97, 14, 162, 203),
+                              ? colorScheme.onInverseSurface
+                              : colorScheme.primary.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   TextButton(
                     onPressed: isFriend
                         ? widget.onClose
@@ -166,24 +167,24 @@ class _RecommenderCarouselState extends State<RecommenderCarousel> {
                               );
                             }
                           },
-                    style: const ButtonStyle(
-                      fixedSize: MaterialStatePropertyAll(Size(200, 50)),
-                      backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                      shape: MaterialStatePropertyAll(
+                    style: ButtonStyle(
+                      fixedSize: const WidgetStatePropertyAll(Size(200, 48)),
+                      backgroundColor:
+                          WidgetStatePropertyAll(colorScheme.primary),
+                      shape: WidgetStatePropertyAll(
                         RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
                     child: Text(
                       isFriend ? "Close" : "Send Request",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
+                      style: textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onPrimary,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -311,11 +312,16 @@ class _RecommendationCardState extends State<RecommendationCard> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final cardColor = colorScheme.inverseSurface;
+    final cardTextColor = colorScheme.onInverseSurface;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(22),
+        color: cardColor,
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.max,
@@ -327,12 +333,16 @@ class _RecommendationCardState extends State<RecommendationCard> {
               return Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(22),
+                    color: colorScheme.surface,
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  child: const Center(
-                    child: Text("No route available",
-                        style: TextStyle(color: Colors.black54)),
+                  child: Center(
+                    child: Text(
+                      "No route available",
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
                 ),
               );
@@ -358,7 +368,7 @@ class _RecommendationCardState extends State<RecommendationCard> {
                 polylineId: const PolylineId('user_route'),
                 points: points,
                 width: 6,
-                color: Colors.grey,
+                color: colorScheme.outline,
                 zIndex: 1,
                 startCap: Cap.roundCap,
                 endCap: Cap.roundCap,
@@ -367,7 +377,7 @@ class _RecommendationCardState extends State<RecommendationCard> {
                 polylineId: const PolylineId('common_route'),
                 points: commonPoints,
                 width: 6,
-                color: Colors.blue,
+                color: colorScheme.primary,
                 zIndex: 2,
                 startCap: Cap.roundCap,
                 endCap: Cap.roundCap,
@@ -391,7 +401,7 @@ class _RecommendationCardState extends State<RecommendationCard> {
 
             return Expanded(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(24),
                 child: AbsorbPointer(
                   child: GoogleMap(
                     initialCameraPosition: CameraPosition(
@@ -433,20 +443,20 @@ class _RecommendationCardState extends State<RecommendationCard> {
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundColor: Colors.grey.shade300,
+                backgroundColor: colorScheme.primaryContainer,
 
                 // When you have an image URL later, this line will activate
                 // backgroundImage: NetworkImage(widget.recommendation.profileImageUrl),
 
-                child: const Text(
+                child: Text(
                   "DP",
-                  style: TextStyle(
-                    color: Colors.black87,
+                  style: textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onPrimaryContainer,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               // Name + gender/age
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,18 +464,16 @@ class _RecommendationCardState extends State<RecommendationCard> {
                 children: [
                   Text(
                     widget.recommendation.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
+                    style: textTheme.titleMedium?.copyWith(
+                      color: cardTextColor,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     "${widget.recommendation.gender}  ${widget.recommendation.age}",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
+                    style: textTheme.labelSmall?.copyWith(
+                      color: cardTextColor.withValues(alpha: 0.78),
                     ),
                   ),
                 ],
@@ -480,9 +488,8 @@ class _RecommendationCardState extends State<RecommendationCard> {
                 const SizedBox(height: 6),
                 Text(
                   widget.recommendation.phoneNumber!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: cardTextColor,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -502,17 +509,17 @@ class _RecommendationCardState extends State<RecommendationCard> {
                     LinearProgressIndicator(
                       value: widget.recommendation.overlapPercent,
                       minHeight: 36, // pill height
-                      backgroundColor: Colors.green.withOpacity(0.25),
-                      valueColor:
-                          const AlwaysStoppedAnimation<Color>(Colors.green),
+                      backgroundColor:
+                          colorScheme.tertiary.withValues(alpha: 0.25),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        colorScheme.tertiary,
+                      ),
                     ),
                     Text(
                       "Shared Route : ${widget.recommendation.overlapDist.toStringAsFixed(1)} km",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
+                      style: textTheme.labelSmall?.copyWith(
+                        color: cardTextColor,
                         fontWeight: FontWeight.w600,
-                        letterSpacing: 0.2,
                       ),
                     ),
                   ],
@@ -523,7 +530,7 @@ class _RecommendationCardState extends State<RecommendationCard> {
           if (widget.allowTransportModes)
             Row(
               children: [
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: widget.recommendation.segments!.map((segment) {
@@ -532,7 +539,7 @@ class _RecommendationCardState extends State<RecommendationCard> {
                       child: Icon(
                         _iconForMode(segment.mode),
                         size: 20,
-                        color: Colors.white70,
+                        color: cardTextColor.withValues(alpha: 0.72),
                       ),
                     );
                   }).toList(),
@@ -541,27 +548,20 @@ class _RecommendationCardState extends State<RecommendationCard> {
             ),
 
           // -- Temporary Meet Split Code --
-          // const SizedBox(height: 12),
+          // const SizedBox(height: 16),
           // // Meet / Split
-          // Text(
-          //   "Meet: ${widget.recommendation.meetPoint}",
-          //   style: const TextStyle(color: Colors.white60, fontSize: 12),
-          // ),
-          // Text(
-          //   "Split: ${widget.recommendation.splitPoint}",
-          //   style: const TextStyle(color: Colors.white60, fontSize: 12),
-          // ),
+          // Text("Meet: ${widget.recommendation.meetPoint}"),
+          // Text("Split: ${widget.recommendation.splitPoint}"),
 
           if (widget.recommendation.canShowETA &&
               widget.recommendation.etaAtMeetPoint != null)
             Row(
               children: [
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Text(
                   "ETA at meet point: ${widget.recommendation.etaAtMeetPoint!.format(context)}",
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 12,
+                  style: textTheme.labelSmall?.copyWith(
+                    color: cardTextColor.withValues(alpha: 0.64),
                   ),
                 ),
               ],
@@ -570,20 +570,21 @@ class _RecommendationCardState extends State<RecommendationCard> {
           if (!showDetails && widget.allowTransportModes)
             Row(
               children: [
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 TextButton(
                   onPressed: _toggleDetails,
-                  style: const ButtonStyle(
-                    overlayColor: MaterialStatePropertyAll(Colors.transparent),
-                    padding: MaterialStatePropertyAll(
+                  style: ButtonStyle(
+                    overlayColor: WidgetStatePropertyAll(
+                      colorScheme.primary.withValues(alpha: 0.08),
+                    ),
+                    padding: const WidgetStatePropertyAll(
                       EdgeInsets.symmetric(vertical: 6),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     "View Details",
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontSize: 14,
+                    style: textTheme.labelLarge?.copyWith(
+                      color: colorScheme.primary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -595,25 +596,21 @@ class _RecommendationCardState extends State<RecommendationCard> {
           // TextButton(
           //   onPressed: _toggleDetails,
           //   style: const ButtonStyle(
-          //     overlayColor: WidgetStatePropertyAll(Colors.transparent),
+          //     overlayColor: WidgetStatePropertyAll(null),
           //     padding: WidgetStatePropertyAll(
           //       EdgeInsets.symmetric(vertical: 6),
           //     ),
           //   ),
           //   child: Text(
           //     showDetails ? "Hide Details" : "View Details",
-          //     style: const TextStyle(
-          //       color: Colors.blue,
-          //       fontSize: 14,
-          //       fontWeight: FontWeight.w500,
-          //     ),
+          //     style: null,
           //   ),
           // ),
 
           if (showDetails && widget.allowTransportModes)
             Column(
               children: [
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 SizedBox(
                   height: 140,
                   child: SingleChildScrollView(
@@ -625,21 +622,22 @@ class _RecommendationCardState extends State<RecommendationCard> {
                             children: [
                               Icon(
                                 _iconForMode(segment.mode),
-                                color: Colors.white,
+                                color: cardTextColor,
                                 size: 18,
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   "${segment.mode}: ${segment.from} → ${segment.to}",
-                                  style: const TextStyle(color: Colors.white),
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: cardTextColor,
+                                  ),
                                 ),
                               ),
                               Text(
                                 "${segment.startTime.format(context)} - ${segment.endTime.format(context)}",
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
+                                style: textTheme.labelSmall?.copyWith(
+                                  color: cardTextColor.withValues(alpha: 0.72),
                                 ),
                               ),
                             ],
@@ -652,17 +650,18 @@ class _RecommendationCardState extends State<RecommendationCard> {
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: _toggleDetails,
-                  style: const ButtonStyle(
-                    overlayColor: MaterialStatePropertyAll(Colors.transparent),
-                    padding: MaterialStatePropertyAll(
+                  style: ButtonStyle(
+                    overlayColor: WidgetStatePropertyAll(
+                      colorScheme.primary.withValues(alpha: 0.08),
+                    ),
+                    padding: const WidgetStatePropertyAll(
                       EdgeInsets.symmetric(vertical: 6),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     "Hide Details",
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontSize: 14,
+                    style: textTheme.labelLarge?.copyWith(
+                      color: colorScheme.primary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

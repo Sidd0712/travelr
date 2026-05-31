@@ -1,4 +1,3 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:travelr/database/profile_model.dart';
@@ -45,6 +44,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       body: userProfile == null
           ? const Center(child: CircularProgressIndicator())
@@ -55,21 +57,23 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     CircleAvatar(
                       radius: 60,
-                      backgroundColor: Colors.blue.shade300,
+                      backgroundColor: colorScheme.primaryContainer,
                       child: Text(
                         userProfile!.name.isNotEmpty
                             ? userProfile!.name[0].toUpperCase()
                             : '?',
-                        style:
-                            const TextStyle(fontSize: 40, color: Colors.white),
+                        style: textTheme.displaySmall?.copyWith(
+                          color: colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       userProfile?.name ?? '',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                      style: textTheme.titleLarge?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -77,33 +81,43 @@ class _ProfilePageState extends State<ProfilePage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Chip(
-                          avatar: const Icon(Icons.male, color: Colors.white),
+                          avatar: Icon(
+                            Icons.person_outline,
+                            color: colorScheme.onSecondaryContainer,
+                          ),
                           label: Text(
                             userProfile?.gender ?? '',
-                            style: const TextStyle(color: Colors.white),
+                            style: textTheme.labelLarge?.copyWith(
+                              color: colorScheme.onSecondaryContainer,
+                            ),
                           ),
-                          backgroundColor: Colors.blue,
+                          backgroundColor: colorScheme.secondaryContainer,
                         ),
                         const SizedBox(width: 8),
                         Chip(
-                          avatar: const Icon(Icons.phone, color: Colors.white),
+                          avatar: Icon(
+                            Icons.phone_outlined,
+                            color: colorScheme.onSecondaryContainer,
+                          ),
                           label: Text(
                             userProfile?.phoneNumber.toString() ?? '',
-                            style: const TextStyle(color: Colors.white),
+                            style: textTheme.labelLarge?.copyWith(
+                              color: colorScheme.onSecondaryContainer,
+                            ),
                           ),
-                          backgroundColor: Colors.blue,
+                          backgroundColor: colorScheme.secondaryContainer,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         "Travel Buddies",
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade800),
+                        style: textTheme.titleMedium?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -118,7 +132,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     SizedBox(
                       height: 100,
                       child: ListView(
@@ -142,19 +156,22 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () => _signOut(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        minimumSize: const Size(double.infinity, 50),
+                        backgroundColor: colorScheme.primary,
+                        minimumSize: const Size(double.infinity, 48),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         "Sign Out",
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+                        style: textTheme.labelLarge?.copyWith(
+                          color: colorScheme.onPrimary,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ],
@@ -165,22 +182,30 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildBuddy(String name, String initial) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
-      margin: const EdgeInsets.only(right: 12),
+      margin: const EdgeInsets.only(right: 16),
       child: Column(
         children: [
           CircleAvatar(
             radius: 28,
-            backgroundColor: Colors.blue.shade300,
+            backgroundColor: colorScheme.primaryContainer,
             child: Text(
               initial,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              style: textTheme.titleMedium?.copyWith(
+                color: colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             name,
-            style: const TextStyle(fontSize: 12),
+            style: textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -188,27 +213,34 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildStatCard(String title, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
       width: 120,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(right: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(12),
+        color: colorScheme.primaryContainer.withValues(alpha: 0.56),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             value,
-            style: const TextStyle(
-                fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blue),
+            style: textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: colorScheme.onPrimaryContainer,
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, color: Colors.black54),
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -216,23 +248,29 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildActionCard(String title, IconData icon) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
       width: 140,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(right: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.shade100,
-        borderRadius: BorderRadius.circular(12),
+        color: colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: Colors.blue, size: 32),
+          Icon(icon, color: colorScheme.onSecondaryContainer, size: 32),
           const SizedBox(height: 8),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSecondaryContainer,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),

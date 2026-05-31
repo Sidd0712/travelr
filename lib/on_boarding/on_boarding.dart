@@ -17,22 +17,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Column(children: [
-          SizedBox(
-            height: 20,
-          ),
+        title: Column(children: [
+          const SizedBox(height: 16),
           Text(
             "travelr",
-            style: TextStyle(
-                fontFamily: "Northlane", fontSize: 38, color: Colors.black),
+            style: textTheme.headlineMedium?.copyWith(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ]),
         centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 30),
+        padding: const EdgeInsets.symmetric(vertical: 32),
         child: Column(
           children: [
             Expanded(
@@ -56,11 +59,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 (index) => buildDot(index),
               ),
             ),
-            const SizedBox(
-              height: 25,
-            ),
+            const SizedBox(height: 24),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
+              padding: const EdgeInsets.symmetric(horizontal: 32),
               child: TextButton(
                 onPressed: () {
                   if (currentIndex == slides.length - 1) {
@@ -75,20 +76,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         curve: Curves.easeInOut);
                   }
                 },
-                style: const ButtonStyle(
-                  fixedSize: WidgetStatePropertyAll(Size(double.infinity, 50)),
-                  padding: WidgetStatePropertyAll(EdgeInsets.zero),
-                  backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                style: ButtonStyle(
+                  fixedSize: const WidgetStatePropertyAll(
+                    Size(double.infinity, 48),
+                  ),
+                  padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+                  backgroundColor: WidgetStatePropertyAll(colorScheme.primary),
                   shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)))),
+                      borderRadius: BorderRadius.circular(12))),
                 ),
                 child: Center(
                   child: Text(
                     currentIndex == slides.length - 1 ? "Get Started" : "Next",
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold),
+                    style: textTheme.labelLarge?.copyWith(
+                      color: colorScheme.onPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),
@@ -100,6 +103,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget buildDot(int index) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return GestureDetector(
       onTap: () => {
         _controller.animateToPage(index,
@@ -114,8 +119,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         width: currentIndex == index ? 25 : 10,
         margin: const EdgeInsets.symmetric(horizontal: 5),
         decoration: BoxDecoration(
-          color: currentIndex == index ? Colors.blue : Colors.grey,
-          borderRadius: BorderRadius.circular(20),
+          color: currentIndex == index
+              ? colorScheme.primary
+              : colorScheme.outlineVariant,
+          borderRadius: BorderRadius.circular(99),
         ),
       ),
     );

@@ -13,6 +13,7 @@ class AuthService {
       required BuildContext context}) async {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
     try {
       UserCredential userCredential =
@@ -49,14 +50,14 @@ class AuthService {
       await ProfilesDatabase.addProfile(newUser);
 
       messenger.showSnackBar(
-        const SnackBar(
-            backgroundColor: Colors.black,
+        SnackBar(
+            backgroundColor: colorScheme.inverseSurface,
             content: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.info, color: Colors.white),
-                SizedBox(width: 5),
-                Text("Sign-Up Successful!")
+                Icon(Icons.info_outline, color: colorScheme.onInverseSurface),
+                const SizedBox(width: 8),
+                const Text("Sign-Up Successful!")
               ],
             )),
       );
@@ -84,12 +85,12 @@ class AuthService {
 
       messenger.showSnackBar(
         SnackBar(
-            backgroundColor: Colors.black,
+            backgroundColor: colorScheme.inverseSurface,
             content: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 5),
+                Icon(Icons.error_outline, color: colorScheme.onInverseSurface),
+                const SizedBox(width: 8),
                 Text(message)
               ],
             )),
@@ -98,14 +99,14 @@ class AuthService {
       await FirebaseAuth.instance.currentUser?.delete();
 
       messenger.showSnackBar(
-        const SnackBar(
-            backgroundColor: Colors.black,
+        SnackBar(
+            backgroundColor: colorScheme.inverseSurface,
             content: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error, color: Colors.white),
-                SizedBox(width: 5),
-                Text("Error while creating profile. Please try again.")
+                Icon(Icons.error_outline, color: colorScheme.onInverseSurface),
+                const SizedBox(width: 8),
+                const Text("Error while creating profile. Please try again.")
               ],
             )),
       );
@@ -118,19 +119,20 @@ class AuthService {
       required BuildContext context}) async {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
     try {
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
       messenger.showSnackBar(
-        const SnackBar(
-            backgroundColor: Colors.black,
+        SnackBar(
+            backgroundColor: colorScheme.inverseSurface,
             content: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.info, color: Colors.white),
-                SizedBox(width: 5),
-                Text("Sign-In Successful!")
+                Icon(Icons.info_outline, color: colorScheme.onInverseSurface),
+                const SizedBox(width: 8),
+                const Text("Sign-In Successful!")
               ],
             )),
       );
@@ -156,12 +158,12 @@ class AuthService {
 
       messenger.showSnackBar(
         SnackBar(
-            backgroundColor: Colors.black,
+            backgroundColor: colorScheme.inverseSurface,
             content: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 5),
+                Icon(Icons.error_outline, color: colorScheme.onInverseSurface),
+                const SizedBox(width: 8),
                 Text(message)
               ],
             )),

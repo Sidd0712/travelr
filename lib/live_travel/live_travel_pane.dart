@@ -24,19 +24,23 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
   String? _lastFitKey;
 
   Row header() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           widget.session.groupName,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          style: textTheme.titleMedium?.copyWith(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         Text(
           'Meet at ${widget.session.meetPoint}',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.black,
-            fontWeight: FontWeight.w400,
+          style: textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -66,18 +70,26 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
   }
 
   Row ETA_Row(TravelParticipant participant) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final progressColor =
+        participant.hasArrived ? colorScheme.tertiary : colorScheme.primary;
+
     return Row(
       children: [
         if (participant.userId != widget.currentUserId) ...[
           CircleAvatar(
             radius: 20,
-            backgroundColor: Colors.grey.shade300,
+            backgroundColor: colorScheme.secondaryContainer,
             child: Text(
               participant.name.characters.first.toUpperCase(),
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSecondaryContainer,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
         ],
         Expanded(
           child: Stack(
@@ -86,22 +98,17 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
               LinearProgressIndicator(
                 value: participant.progressPercent.clamp(0.0, 1.0),
                 minHeight: 24, // pill height
-                backgroundColor:
-                    (participant.hasArrived ? Colors.green : Colors.blue)
-                        .withValues(alpha: 0.2),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  participant.hasArrived ? Colors.green : Colors.blue,
-                ),
-                borderRadius: BorderRadius.circular(14),
+                backgroundColor: progressColor.withValues(alpha: 0.18),
+                valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                borderRadius: BorderRadius.circular(99),
               ),
 
               // ETA text on top of the pill
               Text(
                 participant.etaLabel,
-                style: const TextStyle(
-                  fontSize: 12,
+                style: textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.black,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],
@@ -111,7 +118,9 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
           const SizedBox(width: 8),
           Text(
             participant.currentLocation,
-            style: const TextStyle(fontSize: 12, color: Colors.black),
+            style: textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ],
@@ -124,6 +133,9 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
     List<RouteStop> route,
     bool scrollable,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: ListView.builder(
@@ -144,13 +156,13 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
                   Icon(
                     visited ? Icons.check_circle : Icons.radio_button_unchecked,
                     size: 16,
-                    color: visited ? Colors.green : Colors.grey,
+                    color: visited ? colorScheme.primary : colorScheme.outline,
                   ),
                   if (index != route.length - 1)
                     Container(
                       width: 2,
                       height: 24,
-                      color: Colors.grey.shade300,
+                      color: colorScheme.outlineVariant,
                     ),
                 ],
               ),
@@ -161,12 +173,18 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(stop.placeName),
+                      Text(
+                        stop.placeName,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
                       Text(
                         stop.eta.format(context),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: visited ? Colors.green : Colors.black,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: visited
+                              ? colorScheme.primary
+                              : colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -186,17 +204,25 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
   }
 
   Widget TravellingWithRow(List<String> userIds) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     if (userIds.isEmpty) return SizedBox();
     return Row(
       children: [
-        const Text('Travelling with:', style: TextStyle(fontSize: 12)),
+        Text(
+          'Travelling with:',
+          style: textTheme.labelSmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(width: 8),
         ...userIds.map(
           (id) => Padding(
             padding: const EdgeInsets.only(right: 6),
             child: CircleAvatar(
               radius: 22,
-              backgroundColor: Colors.grey.shade300,
+              backgroundColor: colorScheme.secondaryContainer,
               child: Text(
                 widget.session
                         .participantFor(id)
@@ -205,7 +231,10 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
                         .first
                         .toUpperCase() ??
                     "X",
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: textTheme.titleMedium?.copyWith(
+                  color: colorScheme.onSecondaryContainer,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ),
@@ -219,18 +248,22 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
     return decoded.map((p) => LatLng(p.latitude, p.longitude)).toList();
   }
 
-  Color _routeColorForIndex(int index, bool isMe) {
-    if (isMe) return Colors.blue.shade700;
-    const palette = [
-      Colors.teal,
-      Colors.deepOrange,
-      Colors.purple,
-      Colors.indigo,
-      Colors.green,
-      Colors.brown,
-      Colors.pink,
+  Color _routeColorForIndex(
+    int index,
+    bool isMe,
+    ColorScheme colorScheme,
+  ) {
+    if (isMe) return colorScheme.primary;
+    final palette = [
+      colorScheme.secondary,
+      colorScheme.tertiary,
+      colorScheme.error,
+      colorScheme.inversePrimary,
+      colorScheme.primaryContainer,
+      colorScheme.secondaryContainer,
+      colorScheme.tertiaryContainer,
     ];
-    return palette[index % palette.length].shade600;
+    return palette[index % palette.length];
   }
 
   Future<void> _zoomBy(double delta) async {
@@ -244,17 +277,20 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
     required IconData icon,
     required VoidCallback onTap,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Material(
-      color: Colors.white,
+      color: colorScheme.surface,
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shadowColor: colorScheme.shadow.withValues(alpha: 0.16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         child: SizedBox(
           width: 36,
           height: 36,
-          child: Icon(icon, size: 20, color: Colors.black87),
+          child: Icon(icon, size: 20, color: colorScheme.onSurface),
         ),
       ),
     );
@@ -329,6 +365,7 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final me = widget.session.participantFor(widget.currentUserId);
 
     return GestureDetector(
@@ -338,19 +375,19 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
         }
       },
       child: Card(
-        color: Colors.white,
+        color: colorScheme.surface,
         elevation: 1.5,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               header(),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               MapPlot(),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               ETA_List(),
               AnimatedSize(
                 duration: const Duration(milliseconds: 250),
@@ -359,8 +396,11 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
                 child: expanded && me != null
                     ? Column(
                         children: [
-                          const SizedBox(height: 10),
-                          Divider(height: 2),
+                          const SizedBox(height: 8),
+                          Divider(
+                            height: 2,
+                            color: colorScheme.outlineVariant,
+                          ),
                           SizedBox(
                             height: 160,
                             width: double.infinity,
@@ -374,10 +414,10 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
                       )
                     : const SizedBox.shrink(),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               if (widget.session.currentlyTravellingWith.isEmpty) ...[
-                Divider(height: 2),
-                const SizedBox(height: 10),
+                Divider(height: 2, color: colorScheme.outlineVariant),
+                const SizedBox(height: 8),
               ],
               Row(
                 children: [
@@ -398,12 +438,21 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
   }
 
   Widget MapPlot() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     final participants = widget.session.participants;
 
     if (participants.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: Center(child: Text("No routes available")),
+        child: Center(
+          child: Text(
+            "No routes available",
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
       );
     }
 
@@ -418,8 +467,8 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
       if (points.isEmpty) continue;
 
       final isMe = participant.userId == widget.currentUserId;
-      final routeColor = _routeColorForIndex(routeIndex, isMe);
-      final outlineColor = Colors.black.withValues(alpha: 0.35);
+      final routeColor = _routeColorForIndex(routeIndex, isMe, colorScheme);
+      final outlineColor = colorScheme.shadow.withValues(alpha: 0.35);
 
       polylines[PolylineId('${participant.userId}_base')] = Polyline(
         polylineId: PolylineId('${participant.userId}_base'),
@@ -461,7 +510,8 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
             isMe ? BitmapDescriptor.hueRed : BitmapDescriptor.hueOrange,
           ),
           infoWindow: InfoWindow(
-            title: isMe ? 'Your destination' : '${participant.name} destination',
+            title:
+                isMe ? 'Your destination' : '${participant.name} destination',
           ),
         ),
       );
@@ -470,9 +520,16 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
     }
 
     if (polylines.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: Center(child: Text("No route data")),
+        child: Center(
+          child: Text(
+            "No route data",
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
       );
     }
 
@@ -498,7 +555,7 @@ class _LiveTravelPaneState extends State<LiveTravelPane>
       height: 200,
       width: double.infinity,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: [
             GoogleMap(

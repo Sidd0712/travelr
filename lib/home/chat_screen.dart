@@ -44,6 +44,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     final currentUserID = FirebaseAuth.instance.currentUser!.uid;
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -57,14 +59,21 @@ class _ChatScreenState extends State<ChatScreen> {
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text('No groups available.'));
+          return Center(
+            child: Text(
+              'No groups available.',
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
         } else {
           final groups = snapshot.data!.docs;
 
           //Random Insane Big-Brain Calcs Here
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             itemCount: groups.length,
             itemBuilder: (context, index) {
               final group = groups[index].data();
@@ -82,11 +91,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   : "";
 
               return Padding(
-                padding: const EdgeInsets.all(5.0),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: ListTile(
                   title: Text(
                     groupName,
-                    style: const TextStyle(fontSize: 20),
+                    style: textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
                   ),
                   subtitle: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -95,15 +106,26 @@ class _ChatScreenState extends State<ChatScreen> {
                         child: Text(
                           lastMessage,
                           overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
-                      SizedBox(width: 8),
-                      Text(lastMessageTime),
+                      const SizedBox(width: 8),
+                      Text(
+                        lastMessageTime,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                   leading: CircleAvatar(
-                    backgroundColor: Colors.grey.shade700,
-                    child: Icon(Icons.group, color: Colors.white),
+                    backgroundColor: colorScheme.secondaryContainer,
+                    child: Icon(
+                      Icons.group_outlined,
+                      color: colorScheme.onSecondaryContainer,
+                    ),
                   ),
                   onTap: () {
                     Navigator.push(

@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:travelr/database/profile_model.dart';
 import 'package:travelr/database/profile_service.dart';
 import 'package:travelr/database/chat_service.dart';
 import 'package:travelr/chat/chat_page.dart';
@@ -73,50 +72,43 @@ class _CreateChatPageState extends State<CreateChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("New Chat"),
+        title: Text(
+          "New Chat",
+          style: textTheme.titleLarge?.copyWith(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: Colors.black),
+          icon: Icon(Icons.arrow_back_rounded, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
-              cursorColor: Colors.black,
+              cursorColor: colorScheme.primary,
               controller: groupNameController,
               decoration: const InputDecoration(
-                filled: true,
                 hintText: "Group Name",
-                contentPadding: EdgeInsets.all(15),
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    borderSide: BorderSide()),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 8),
             TextField(
+              cursorColor: colorScheme.primary,
               decoration: InputDecoration(
-                filled: true,
                 hintText: "Search contacts...",
-                prefixIcon: Icon(Icons.search),
-                contentPadding: EdgeInsets.all(15),
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    borderSide: BorderSide()),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
               onChanged: (value) {
@@ -154,14 +146,20 @@ class _CreateChatPageState extends State<CreateChatPage> {
 
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor:
-                              isSelected ? Colors.blue : Colors.grey.shade700,
+                          backgroundColor: isSelected
+                              ? colorScheme.primary
+                              : colorScheme.secondaryContainer,
                           child: isSelected
-                              ? const Icon(Icons.check_rounded,
-                                  color: Colors.white)
-                              : const Icon(Icons.person, color: Colors.white),
+                              ? Icon(
+                                  Icons.check_rounded,
+                                  color: colorScheme.onPrimary,
+                                )
+                              : Icon(
+                                  Icons.person_outline,
+                                  color: colorScheme.onSecondaryContainer,
+                                ),
                         ),
-                        title: Text(name),
+                        title: Text(name, style: textTheme.bodyLarge),
                         onTap: () => _toggleSelection(uid),
                       );
                     },
@@ -171,20 +169,22 @@ class _CreateChatPageState extends State<CreateChatPage> {
             ),
             TextButton(
               onPressed: () => _createChat(context),
-              style: const ButtonStyle(
-                fixedSize: WidgetStatePropertyAll(Size(double.infinity, 50)),
-                padding: WidgetStatePropertyAll(EdgeInsets.zero),
-                backgroundColor: WidgetStatePropertyAll(Colors.blue),
+              style: ButtonStyle(
+                fixedSize: const WidgetStatePropertyAll(
+                  Size(double.infinity, 48),
+                ),
+                padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+                backgroundColor: WidgetStatePropertyAll(colorScheme.primary),
                 shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)))),
+                    borderRadius: BorderRadius.circular(12))),
               ),
               child: Center(
                 child: Text(
                   "Create",
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold),
+                  style: textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             )

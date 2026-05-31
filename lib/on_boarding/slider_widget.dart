@@ -10,22 +10,30 @@ class SliderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30),
+      padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Image.asset(image, height: 250),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           Text(
             title,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            style: textTheme.titleLarge?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w800,
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             description,
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
+            style: textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),

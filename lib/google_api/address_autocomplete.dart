@@ -43,7 +43,7 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
         _insertOverlay();
       } else {
         // Delay removal to let onTap register
-        Future.delayed(Duration(milliseconds: 100), () {
+        Future.delayed(const Duration(milliseconds: 100), () {
           if (!_focusNode.hasFocus) {
             _removeOverlay();
           }
@@ -90,6 +90,8 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
   }
 
   OverlayEntry _createOverlayEntry() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     Size size = renderBox.size;
     Offset offset = renderBox.localToGlobal(Offset.zero);
@@ -104,21 +106,28 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
           offset: Offset(0.0, size.height + 4),
           showWhenUnlinked: false,
           child: Material(
+            color: colorScheme.surface,
+            shadowColor: colorScheme.shadow.withValues(alpha: 0.16),
             elevation: 4,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             child: isLoading
                 ? const Padding(
-                    padding: EdgeInsets.all(16.0),
+                    padding: EdgeInsets.all(16),
                     child: Center(child: CircularProgressIndicator()),
                   )
                 : listOfLocation.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text("No results found"),
+                    ? Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          "No results found",
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       )
                     : ListView.builder(
                         shrinkWrap: true,
-                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                         itemCount: min(listOfLocation.length, 3),
                         itemBuilder: (context, index) {
                           final desc = listOfLocation[index]["description"];
@@ -207,25 +216,16 @@ class _AddressAutocompleteState extends State<AddressAutocomplete> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return CompositedTransformTarget(
       link: _layerLink,
       child: TextFormField(
         focusNode: _focusNode,
         controller: widget.controller,
-        cursorColor: Colors.black,
+        cursorColor: colorScheme.primary,
         decoration: InputDecoration(
-          filled: true,
           hintText: widget.hintText,
-          contentPadding: const EdgeInsets.all(15),
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: const BorderRadius.all(Radius.circular(10)),
-            borderSide: const BorderSide(),
-          ),
-          focusedBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.blue, width: 2),
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-          ),
         ),
       ),
     );

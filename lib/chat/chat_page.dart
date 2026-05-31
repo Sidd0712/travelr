@@ -60,11 +60,11 @@ class _ChatPageState extends State<ChatPage> {
 
     _sendChatNotification(text);
 
-    Future.delayed(Duration(milliseconds: 100), () {
+    Future.delayed(const Duration(milliseconds: 100), () {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
       );
     });
   }
@@ -102,21 +102,26 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Column(children: [
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Text(
             _groupName ?? widget.groupName,
-            style: const TextStyle(
-                fontSize: 25, color: Colors.black, fontWeight: FontWeight.w500),
+            style: textTheme.titleLarge?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ]),
         forceMaterialTransparency: true,
         leading: Padding(
           padding: const EdgeInsets.only(top: 10, left: 10),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
+            icon: Icon(Icons.arrow_back_rounded, color: colorScheme.onSurface),
             iconSize: 38,
             onPressed: () => Navigator.pop(context),
           ),
@@ -125,7 +130,7 @@ class _ChatPageState extends State<ChatPage> {
           Padding(
             padding: const EdgeInsets.only(top: 10, left: 10),
             child: IconButton(
-              icon: const Icon(Icons.route_outlined),
+              icon: Icon(Icons.route_outlined, color: colorScheme.primary),
               onPressed: () async {
                 if (_controller.session == null) {
                   debugPrint("Calling API...");
@@ -179,7 +184,7 @@ class _ChatPageState extends State<ChatPage> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15.0),
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
           child: Column(
             children: [
               AnimatedBuilder(
@@ -196,7 +201,7 @@ class _ChatPageState extends State<ChatPage> {
               Expanded(
                 child: _buildMessagesList(),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               _userInput(),
             ],
           ),
@@ -206,6 +211,9 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildMessagesList() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     if (_currentUserID == null || _members == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -214,15 +222,36 @@ class _ChatPageState extends State<ChatPage> {
       stream: ChatService.getMessages(widget.roomID),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Center(child: Text("Error"));
+          return Center(
+            child: Text(
+              "Error",
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.error,
+              ),
+            ),
+          );
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: Text("Loading..."));
+          return Center(
+            child: Text(
+              "Loading...",
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
         }
 
         if (snapshot.data == null || snapshot.data!.isEmpty) {
-          return const Center(child: Text("Start a chat..."));
+          return Center(
+            child: Text(
+              "Start a chat...",
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
         }
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -239,6 +268,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildMessageItem(Message data) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     bool isSent = data.senderID == _currentUserID;
     String message = data.message;
     // print(data.timestamp.toDate().toLocal().toString());
@@ -251,26 +282,27 @@ class _ChatPageState extends State<ChatPage> {
         children: [
           if (!isSent)
             Padding(
-              padding: const EdgeInsets.only(left: 12.0, bottom: 2),
+              padding: const EdgeInsets.only(left: 16, bottom: 8),
               child: Text(
                 _members?[data.senderID] ?? "Unknown Sender",
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700],
+                style: textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
           Container(
-            margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 10),
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             decoration: BoxDecoration(
-              color: isSent ? Colors.blue : Colors.grey[300],
+              color: isSent
+                  ? colorScheme.primary
+                  : colorScheme.surfaceContainerHighest.withValues(alpha: 0.72),
               borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(15),
-                topRight: const Radius.circular(15),
-                bottomLeft: isSent ? const Radius.circular(15) : Radius.zero,
-                bottomRight: isSent ? Radius.zero : const Radius.circular(15),
+                topLeft: const Radius.circular(18),
+                topRight: const Radius.circular(18),
+                bottomLeft: isSent ? const Radius.circular(18) : Radius.zero,
+                bottomRight: isSent ? Radius.zero : const Radius.circular(18),
               ),
             ),
             child: Column(
@@ -279,12 +311,12 @@ class _ChatPageState extends State<ChatPage> {
               children: [
                 Text(
                   message,
-                  style: TextStyle(
-                    color: isSent ? Colors.white : Colors.black,
-                    fontSize: 16,
+                  style: textTheme.bodyLarge?.copyWith(
+                    color:
+                        isSent ? colorScheme.onPrimary : colorScheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 8),
                 Text(
                   data.timestamp
                       .toDate()
@@ -292,9 +324,10 @@ class _ChatPageState extends State<ChatPage> {
                       .toString()
                       .split(' ')[1]
                       .substring(0, 5),
-                  style: TextStyle(
-                    color: isSent ? Colors.white70 : Colors.black54,
-                    fontSize: 11,
+                  style: textTheme.labelSmall?.copyWith(
+                    color: isSent
+                        ? colorScheme.onPrimary.withValues(alpha: 0.72)
+                        : colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -306,40 +339,40 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _userInput() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15.0),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
           Expanded(
             child: TextFormField(
-              cursorColor: Colors.black,
+              cursorColor: colorScheme.primary,
               controller: _messagesController,
               textInputAction: TextInputAction.send,
               onFieldSubmitted: (value) => sendMessage(),
-              decoration: const InputDecoration(
-                filled: true,
+              decoration: InputDecoration(
                 hintText: "Type a message...",
-                hintStyle: TextStyle(color: Colors.grey),
-                contentPadding: EdgeInsets.all(15),
-                fillColor: Colors.white,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(50)),
-                    borderSide: BorderSide()),
+                  borderRadius: BorderRadius.circular(99),
+                ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
-                  borderRadius: BorderRadius.all(Radius.circular(50)),
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                  borderRadius: BorderRadius.circular(99),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.arrow_upward_rounded),
+            icon: Icon(
+              Icons.arrow_upward_rounded,
+              color: colorScheme.onPrimary,
+            ),
             onPressed: sendMessage,
             iconSize: 35,
-            color: Colors.white,
             style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.all(Colors.blue),
+              backgroundColor: WidgetStateProperty.all(colorScheme.primary),
             ),
           ),
         ],
