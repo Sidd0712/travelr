@@ -32,6 +32,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _signOut(BuildContext context) async {
+    print("Signup Triggered");
     await NotificationService().unregisterFcmToken();
     await FirebaseAuth.instance.signOut();
     if (!context.mounted) return;

@@ -22,11 +22,12 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
 
     Future.wait(
             [Future.delayed(const Duration(seconds: 3)), _checkAuthStatus()])
-        .then((results) async {
+        .then((results) {
+      if (!mounted) return;
       final isLoggedIn = results[1] as bool;
 
       if (isLoggedIn) {
-        await NotificationService().init(
+        NotificationService().init(
           onForeground: NotificationRouter.handleForegroundNotification,
           onTap: NotificationRouter.handleNotificationTap,
         );
@@ -46,7 +47,7 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
   }
 
   Future<bool> _checkAuthStatus() async {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = await FirebaseAuth.instance.authStateChanges().first;
     return user != null;
   }
 

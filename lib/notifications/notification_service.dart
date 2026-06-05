@@ -17,6 +17,7 @@ class NotificationService {
 
   NotificationHandler? onForegroundMessage;
   NotificationHandler? onNotificationTap;
+  bool _listenersRegistered = false;
 
   static const String _baseUrl = 'https://travelr-ml.onrender.com';
 
@@ -28,7 +29,11 @@ class NotificationService {
     onForegroundMessage = onForeground;
     onNotificationTap = onTap;
 
-    await _requestPermission();
+    try {
+      await _requestPermission();
+    } catch (e) {
+      debugPrint("FCM permission request failed: $e");
+    }
 
     // Initial token
     try {
@@ -40,29 +45,41 @@ class NotificationService {
       debugPrint("FCM token fetch failed (will retry on refresh): $e");
     }
 
-    // Token refresh
-    _messaging.onTokenRefresh.listen((newToken) {
-      log("Somehow got the token lol");
-      sendFcmToken(newToken);
-    });
+    if (!_listenersRegistered) {
+      try {
+        // Token refresh
+        _messaging.onTokenRefresh.listen((newToken) {
+          log("Somehow got the token lol");
+          sendFcmToken(newToken);
+        });
 
-    // Foreground messages
-    FirebaseMessaging.onMessage.listen((message) {
-      log('FCM foreground: ${message.data}');
-      onForegroundMessage?.call(message);
-    });
+        // Foreground messages
+        FirebaseMessaging.onMessage.listen((message) {
+          log('FCM foreground: ${message.data}');
+          onForegroundMessage?.call(message);
+        });
 
-    // Background → opened
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      log('FCM opened from background: ${message.data}');
-      onNotificationTap?.call(message);
-    });
+        // Background opened
+        FirebaseMessaging.onMessageOpenedApp.listen((message) {
+          log('FCM opened from background: ${message.data}');
+          onNotificationTap?.call(message);
+        });
 
-    // Terminated → opened
-    final initialMessage = await _messaging.getInitialMessage();
-    if (initialMessage != null) {
-      log('FCM opened from terminated: ${initialMessage.data}');
-      onNotificationTap?.call(initialMessage);
+        _listenersRegistered = true;
+      } catch (e) {
+        debugPrint("FCM listener registration failed: $e");
+      }
+    }
+
+    // Terminated opened
+    try {
+      final initialMessage = await _messaging.getInitialMessage();
+      if (initialMessage != null) {
+        log('FCM opened from terminated: ${initialMessage.data}');
+        onNotificationTap?.call(initialMessage);
+      }
+    } catch (e) {
+      debugPrint("FCM initial message fetch failed: $e");
     }
   }
 

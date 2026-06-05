@@ -253,7 +253,7 @@ class _LoginPageState extends State<LoginPage>
       obscureText: _obscureText,
       decoration: InputDecoration(
         suffixIcon: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.only(top: 8),
           child: IconButton(
             icon: Icon(
               _obscureText
